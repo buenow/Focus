@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Telemetria - Focus 2008</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121214;
+            color: #e1e1e6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 { color: #4ade80; margin-bottom: 5px; }
+        p { color: #8d8d99; margin-top: 0; margin-bottom: 30px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 200px);
+            gap: 20px;
+        }
+        .card {
+            background-color: #202024;
+            border: 1px solid #323238;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .card h3 { margin: 0 0 10px 0; color: #a8a8b3; font-size: 14px; text-transform: uppercase; }
+        .value { font-size: 32px; font-weight: bold; color: #ffffff; }
+        .unit { font-size: 14px; color: #8d8d99; }
+        .status {
+            margin-top: 30px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .connected { background-color: #115e59; color: #14b8a6; }
+        .disconnected { background-color: #991b1b; color: #ef4444; }
+    </style>
+</head>
+<body>
+
+    <h1>NinoOS - Painel de Teste</h1>
+    <p>Conectando direto no Emulador Python via WebSockets</p>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Rotação</h3>
+            <div class="value" id="rpm">0</div>
+            <div class="unit">RPM</div>
+        </div>
+        <div class="card">
+            <h3>Velocidade</h3>
+            <div class="value" id="speed">0</div>
+            <div class="unit">km/h</div>
+        </div>
+        <div class="card">
+            <h3>Temperatura</h3>
+            <div class="value" id="temp" style="color: #f87171;">25.0</div>
+            <div class="unit">°C</div>
+        </div>
+        <div class="card">
+            <h3>Short Term Fuel Trim</h3>
+            <div class="value" id="stft">0.0</div>
+            <div class="unit">%</div>
+        </div>
+        <div class="card">
+            <h3>Long Term Fuel Trim</h3>
+            <div class="value" id="ltft">0.0</div>
+            <div class="unit">%</div>
+        </div>
+        <div class="card">
+            <h3>Status Motor</h3>
+            <div class="value" id="status_motor" style="font-size: 24px; color: #fbbf24;">-</div>
+            <div class="unit">IGNIÇÃO</div>
+        </div>
+    </div>
+
+    <div id="status-badge" class="status disconnected">DESCONECTADO</div>
+
+    <script>
+        // Cria a conexão WebSocket com o servidor FastAPI
+        const ws = new WebSocket("ws://localhost:8088/ws/telemetry");
+        const badge = document.getElementById("status-badge");
+
+        // Quando a conexão for estabelecida
+        ws.onopen = () => {
+            badge.innerText = "CONECTADO AO EMULADOR";
+            badge.className = "status connected";
+        };
+
+        // Quando receber dados do Python
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            // Atualiza os elementos da tela em tempo real
+            document.getElementById("rpm").innerText = data.rpm;
+            document.getElementById("speed").innerText = data.speed;
+            document.getElementById("temp").innerText = data.coolant_temp.toFixed(1);
+            document.getElementById("stft").innerText = data.stft.toFixed(2);
+            document.getElementById("ltft").innerText = data.ltft.toFixed(2);
+            document.getElementById("status_motor").innerText = data.status_motor;
+        };
+
+        // Se o servidor for desligado
+        ws.onclose = () => {
+            badge.innerText = "CONEXÃO PERDIDA";
+            badge.className = "status disconnected";
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+# --- DEPENDÊNCIAS E PACOTES (NÃO COMMITAR) ---
+node_modules/
+venv/
+.venv/
+ENV/
+env/
+
+# --- ARQUIVOS DE COMPILAÇÃO E PRODUÇÃO ---
+dist/
+dist-ssr/
+*.local
+
+# --- BANCO DE DADOS LOCAL (OPCIONAL) ---
+# Se quiser commitar o banco SQLite tire a linha abaixo, mas o recomendado é ignorar
+db.sqlite3
+
+# --- CACHES DO SISTEMA E DO PYTHON ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.密/
+.DS_Store
+Thumbs.db
+
+# --- CONFIGURAÇÕES DO VS CODE ---
+.vscode/
+downloads/
+*.msi
