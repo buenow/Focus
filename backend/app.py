@@ -1,5 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from simulator import FocusSimulator
+from backend.simulator import FocusSimulator
 import asyncio
 import json
 

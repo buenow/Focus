@@ -1,161 +1,56 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+// Importamos a lógica externa (Desacoplamento de Arquitetura)
+import { useVehicle } from './composables/useVehicle'
 
-// =========================================================================
-// [SISTEMA] CONTROLE DE NAVEGAÇÃO (ESTADO DAS TELAS / VIEWS)
-// =========================================================================
-const currentScreen = ref('cockpit') // Telas disponíveis: 'cockpit', 'logs', 'diagnosticos', 'config'
+// Estado local exclusivo de navegação da interface
+const currentScreen = ref('cockpit') 
 
-// =========================================================================
-// [MODEL] ESTADOS REATIVOS DA TELEMETRIA (REDE CAN BUS)
-// =========================================================================
-const telemetry = ref({
-  rpm: 0,
-  speed: 0,
-  coolant_temp: 25.0,
-  stft: 0.0, 
-  ltft: 0.0,
-  status_motor: 'Desligado'
-})
+// Estado do relógio local em tempo real
+const localTime = ref('')
+let clockInterval = null
 
-const isConnected = ref(false)
-let ws = null
-
-// =========================================================================
-// [MODEL] ESTADOS DO MÓDULO TRIP (COMPUTADOR DE BORDO)
-// =========================================================================
-const isTripActive = ref(false)
-const tripOrigin = ref('Americana')
-const tripDest = ref('Santa Bárbara')
-const currentTripDistance = ref(0.0)
-const distanciaEstimada = ref(15.0) 
-
-// Parâmetros de engenharia base do Ford Focus 2008 Flex
-const consumoPuroGasolina = ref(11.5) 
-const consumoPuroAlcool = ref(7.5)     
-const limiteReserva = ref(7.0)         
-
-// Tanque de Combustível Dinâmico
-const litrosGasolina = ref(25.0)
-const litrosAlcool = ref(15.0)
-const precoGasolina = ref(5.50)
-const precoAlcool = ref(3.80)
-
-const tripCost = ref(0.0) 
-let tripInterval = null
-
-// =========================================================================
-// [MODEL / MOCK] DADOS TEMPORÁRIOS DO BANCO DE DADOS (FLUXO DE APROVAÇÃO/RELIATORIOS)
-// =========================================================================
-const dbLogs = ref([
-  { id: 1, data: '2026-06-24 10:15', usuario_registro: 'Admin_Oficina', usuario_revisor: 'Eng_Mecanico', status: 'Homologado', descricao: 'Calibração de Injeção Padrão Focus 2008' },
-  { id: 2, data: '2026-06-23 14:30', usuario_registro: 'Técnico_Bancada', usuario_revisor: 'Eng_Mecanico', status: 'Revisado', descricao: 'Ajuste Estequiométrico para Etanol Puro' }
-])
-
-// =========================================================================
-// [CONTROLLER / COMPUTED] LÓGICA MATEMÁTICA E REGRAS DE NEGÓCIO
-// =========================================================================
-const volumeTotal = computed(() => {
-  const total = (Number(litrosGasolina.value) || 0) + (Number(litrosAlcool.value) || 0)
-  return total > 0 ? total : 0
-})
-
-const propGasolina = computed(() => volumeTotal.value > 0 ? litrosGasolina.value / volumeTotal.value : 0)
-const propAlcool = computed(() => volumeTotal.value > 0 ? litrosAlcool.value / volumeTotal.value : 0)
-
-const fuelPrice = computed(() => {
-  if (volumeTotal.value === 0) return 0
-  return (propGasolina.value * precoGasolina.value) + (propAlcool.value * precoAlcool.value)
-})
-
-const avgConsumption = computed(() => {
-  if (volumeTotal.value === 0) return consumoPuroGasolina.value
-  return (propGasolina.value * consumoPuroGasolina.value) + (propAlcool.value * consumoPuroAlcool.value)
-})
-
-const autonomia = computed(() => volumeTotal.value * avgConsumption.value)
-const isCombustivelBaixo = computed(() => volumeTotal.value <= limiteReserva.value)
-const autonomiaInsuficiente = computed(() => distanciaEstimada.value > autonomia.value)
-
-// Lógica do Econômetro baseada em RPM e STFT
-const cargaMotor = computed(() => {
-  if (telemetry.value.rpm === 0 || telemetry.value.status_motor === 'Desligado') return 0
-  const fatorRPM = (telemetry.value.rpm / 6500) * 60 
-  const fatorCarga = Math.max(0, telemetry.value.stft) * 4 
-  return Math.min(Math.round(fatorRPM + fatorCarga), 100)
-})
-
-const modoConducao = computed(() => {
-  if (telemetry.value.rpm === 0) return { nome: 'DESLIGADO', cor: 'text-slate-500', bg: 'bg-slate-950', barra: 'bg-slate-800' }
-  if (cargaMotor.value < 25) return { nome: 'ECO ★★★', cor: 'text-emerald-400', bg: 'bg-emerald-950/30', barra: 'bg-emerald-500' }
-  if (cargaMotor.value < 55) return { nome: 'MODERADO', cor: 'text-cyan-400', bg: 'bg-cyan-950/20', barra: 'bg-cyan-500' }
-  return { nome: 'PERFORMANCE / SPORT', cor: 'text-red-400', bg: 'bg-red-950/40', barra: 'bg-red-500 animate-pulse' }
-})
-
-const consumoInstantaneo = computed(() => {
-  if (telemetry.value.rpm === 0 || telemetry.value.speed === 0) return 0
-  const base = avgConsumption.value 
-  const fatorEsforco = 1 - (cargaMotor.value / 150) 
-  return Math.max(3.0, base * fatorEsforco) 
-})
-
-// =========================================================================
-// [CONTROLLER / ACTIONS] PROCESSAMENTO DE EVENTOS E CONEXÕES
-// =========================================================================
-const toggleTrip = () => {
-  if (!isTripActive.value && autonomiaInsuficiente.value) {
-    alert(`BLOQUEIO DE SEGURANÇA!\n\nA autonomia atual (${autonomia.value.toFixed(1)} km) é insuficiente para a rota planejada de ${distanciaEstimada.value} km.`)
-    return
-  }
-
-  if (!isTripActive.value) {
-    isTripActive.value = true
-    currentTripDistance.value = 0.0
-    tripCost.value = 0.0
-
-    tripInterval = setInterval(() => {
-      if (telemetry.value.speed > 0) {
-        const distanciaFracao = (telemetry.value.speed / 3600) * 0.1 
-        currentTripDistance.value += distanciaFracao
-
-        if (consumoInstantaneo.value > 0 && volumeTotal.value > 0) {
-          const litrosConsumidosNesseInstante = distanciaFracao / consumoInstantaneo.value
-          tripCost.value += litrosConsumidosNesseInstante * fuelPrice.value
-
-          litrosGasolina.value = Math.max(0, litrosGasolina.value - (litrosConsumidosNesseInstante * propGasolina.value))
-          litrosAlcool.value = Math.max(0, litrosAlcool.value - (litrosConsumidosNesseInstante * propAlcool.value))
-        }
-        
-        if (volumeTotal.value <= 0) {
-          clearInterval(tripInterval)
-          isTripActive.value = false
-          telemetry.value.speed = 0
-          telemetry.value.rpm = 0
-          telemetry.value.status_motor = 'Pane Seca'
-          alert("⚠️ PANE SECA! O combustível esgotou. O trajeto foi abortado.")
-        }
-      }
-    }, 100)
-
-  } else {
-    isTripActive.value = false
-    clearInterval(tripInterval)
-    alert(`Trajeto Concluído!\n\nDistância Real: ${currentTripDistance.value.toFixed(2)} km\nCusto Total: R$ ${tripCost.value.toFixed(2)}`)
-  }
+const updateClock = () => {
+  const now = new Date()
+  localTime.value = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
-const connectWebSocket = () => {
-  ws = new WebSocket('ws://localhost:8088/ws/telemetry')
-  ws.onopen = () => isConnected.value = true
-  ws.onmessage = (event) => { telemetry.value = JSON.parse(event.data) }
-  ws.onclose = () => { isConnected.value = false; setTimeout(connectWebSocket, 3000) }
-}
+onMounted(() => {
+  updateClock()
+  clockInterval = setInterval(updateClock, 1000)
+})
 
-onMounted(() => connectWebSocket())
 onUnmounted(() => {
-  if (ws) ws.close()
-  if (tripInterval) clearInterval(tripInterval)
+  if (clockInterval) clearInterval(clockInterval)
 })
+
+// Extraímos as variáveis e funções vindas do nosso controlador "useVehicle"
+const {
+  telemetry,
+  isConnected,
+  isTripActive,
+  tripOrigin,
+  tripDest,
+  currentTripDistance,
+  distanciaEstimada,
+  litrosGasolina,
+  litrosAlcool,
+  precoGasolina,
+  precoAlcool,
+  tripCost,
+  dbLogs,
+  volumeTotal,
+  propGasolina,
+  propAlcool,
+  avgConsumption,
+  autonomia,
+  isCombustivelBaixo,
+  autonomiaInsuficiente,
+  cargaMotor,
+  modoConducao,
+  consumoInstantaneo,
+  toggleTrip
+} = useVehicle()
 </script>
 
 <template>
@@ -204,10 +99,15 @@ onUnmounted(() => {
             {{ currentScreen === 'cockpit' ? 'Painel de Telemetria Ativa' : currentScreen === 'logs' ? 'Repositório de Logs e Homologação' : 'Monitor de barramento CAN Bus' }}
           </h2>
         </div>
-        <div class="text-[10px] text-slate-500 font-mono">FRAMEWORK L. v1.5</div>
+        <div class="text-[10px] text-slate-500 font-mono flex items-center gap-4">
+          <span>HORA LOCAL: <b class="text-slate-300">{{ localTime }}</b></span>
+          <span>|</span>
+          <span>FRAMEWORK L. v1.5</span>
+        </div>
       </header>
 
-      <main v-if="currentScreen === 'cockpit'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 flex-grow mb-6">
+      <main v-if="currentScreen === 'cockpit'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 flex-grow mb-6">
+        
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
           <span class="text-xs font-bold text-slate-400 tracking-wider font-mono uppercase">Rotação</span>
           <div class="my-auto py-2">
@@ -222,7 +122,7 @@ onUnmounted(() => {
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
           <span class="text-xs font-bold text-slate-400 tracking-wider font-mono uppercase">Velocidade</span>
           <div class="my-auto py-2">
-            <span class="text-5xl font-black font-mono tracking-tight text-emerald-400">{{ telemetry.speed }}</span>
+            <span class="text-5xl font-black font-mono tracking-tight text-emerald-400">{{ isTripActive ? telemetry.speed : 0 }}</span>
             <span class="text-xs text-slate-500 ml-1 font-bold font-mono">km/h</span>
           </div>
           <div class="text-[10px] text-slate-500 font-mono tracking-widest">PID 010D VIA CAN</div>
@@ -237,7 +137,7 @@ onUnmounted(() => {
           </div>
           <div class="my-auto py-1 text-center">
             <div class="text-3xl font-black font-mono tracking-tight" :class="modoConducao.cor">
-              {{ cargaMotor }}<span class="text-xs text-slate-400 ml-0.5 font-normal">% Carga</span>
+              {{ cargaMotor }}<span class="text-xs text-slate-400 ml-0.5 font-normal">% Esforço</span>
             </div>
             <div class="text-md font-mono font-bold mt-1 text-slate-200">
               {{ telemetry.speed > 0 ? `${consumoInstantaneo.toFixed(1)} km/L` : '--- km/L' }}
@@ -250,21 +150,27 @@ onUnmounted(() => {
         </div>
 
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
-          <span class="text-xs font-bold text-slate-400 tracking-wider font-mono uppercase">Sistemas & Temperatura</span>
-          <div class="space-y-2 my-auto font-mono text-xs">
+          <span class="text-xs font-bold text-slate-400 tracking-wider font-mono uppercase">Sistemas & Energia</span>
+          <div class="space-y-3 my-auto font-mono text-xs">
             <div class="flex justify-between border-b border-slate-800 pb-1">
-              <span class="text-slate-400">Motor status:</span>
+              <span class="text-slate-400">Motor:</span>
               <span :class="['font-bold', telemetry.status_motor === 'Pane Seca' ? 'text-red-500 animate-pulse' : 'text-orange-400']">
                 {{ telemetry.status_motor }}
               </span>
             </div>
             <div class="flex justify-between border-b border-slate-800 pb-1">
-              <span class="text-slate-400">Arrefecimento:</span>
+              <span class="text-slate-400">Arrefec:</span>
               <span class="font-bold text-slate-200">{{ telemetry.coolant_temp.toFixed(1) }} °C</span>
             </div>
-            <div class="flex justify-between text-[11px] text-slate-500">
-              <span>STFT: {{ telemetry.stft.toFixed(1) }}%</span>
-              <span>LTFT: {{ telemetry.ltft.toFixed(1) }}%</span>
+            <div class="flex justify-between border-b border-slate-800 pb-1">
+              <span class="text-slate-400">Bateria:</span>
+              <span class="font-bold text-emerald-400">{{ telemetry.battery || '12.6' }}V</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Gerador:</span>
+              <span :class="['font-bold', telemetry.rpm > 500 ? 'text-emerald-500' : 'text-red-500']">
+                {{ telemetry.rpm > 500 ? 'ATIVO' : 'INATIVO' }}
+              </span>
             </div>
           </div>
           <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
@@ -272,7 +178,24 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-bold text-slate-400 tracking-wider font-mono uppercase">Ambiente & Clima</span>
+            <span class="text-2xl leading-none filter drop-shadow animate-pulse">☁️</span>
+          </div>
+          <div class="my-auto py-1 font-mono">
+            <div class="text-2xl font-black text-slate-200 tracking-tight text-center border-b border-slate-800/60 pb-1.5 mb-1.5">
+              {{ localTime.split(':')[0] }}:{{ localTime.split(':')[1] }}<span class="text-xs text-slate-500 font-normal ml-1">{{ localTime.split(':')[2] }}</span>
+            </div>
+            <div class="space-y-1 text-xs">
+              <div class="flex justify-between"><span class="text-slate-400">Temp. Externa:</span><span class="font-bold text-cyan-400">24.0 °C</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Temp. Interna:</span><span class="font-bold text-emerald-400">22.5 °C</span></div>
+            </div>
+          </div>
+          <div class="text-[9px] text-slate-500 font-mono uppercase tracking-tight text-center">Previsão: Ensolarado / Parcialmente Nublado</div>
+        </div>
+
+        <div class="xl:col-span-5 lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div class="space-y-3 lg:border-r lg:border-slate-800 lg:pr-4">
             <h3 class="text-sm font-bold text-emerald-400 font-mono uppercase tracking-wider">Configuração de Campo</h3>
             <div>
@@ -329,7 +252,6 @@ onUnmounted(() => {
           <h3 class="text-sm font-bold text-emerald-400 font-mono uppercase tracking-wider">Log de Aprovações e Configurações de Engenharia</h3>
           <span class="text-xs font-mono text-slate-500">Tabela Ativa: `homologacao_reports`</span>
         </div>
-        
         <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/40">
           <table class="w-full text-left font-mono text-xs border-collapse">
             <thead>
@@ -358,7 +280,7 @@ onUnmounted(() => {
             </tbody>
           </table>
         </div>
-        <p class="text-[10px] text-slate-500 mt-3 font-mono">💡 Este módulo simula a leitura relacional do SQLite local. Pronto para gerar relatórios automatizados de conformidade veicular.</p>
+        <p class="text-[10px] text-slate-500 mt-3 font-mono">💡 Este módulo simula a leitura relacional do SQLite local. Pronto para gerar relatórios automatizados.</p>
       </main>
 
       <main v-else-if="currentScreen === 'diagnosticos'" class="flex-grow bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl mb-6 flex flex-col justify-between">
