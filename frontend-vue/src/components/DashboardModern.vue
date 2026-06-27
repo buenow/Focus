@@ -1,13 +1,11 @@
 <template>
   <div class="h-screen w-screen civic-cluster-bg text-white font-sans overflow-hidden flex relative select-none">
     
-    <!-- EFEITO DE FUNDO: GRID DEGRADÊ -->
     <div class="grid-overlay absolute inset-0 z-0"></div>
     <div class="absolute top-0 inset-x-0 h-[40%] bg-gradient-to-b from-blue-500/10 to-transparent blur-[100px] pointer-events-none z-0"></div>
 
-    <!-- SIDEBAR DE NAVEGAÇÃO -->
-    <aside class="w-24 h-full border-r border-white/5 flex flex-col items-center py-6 gap-6 z-20 relative shadow-[4px_0_24px_rgba(0,0,0,0.5)] transition-colors duration-300"
-           :class="engineAlert ? 'bg-red-950/90 border-red-500 animate-pulse shadow-[0_0_30px_rgba(220,38,38,0.3)]' : 'bg-[#020510]/90 backdrop-blur-xl'">
+    <aside class="w-24 h-full border-r flex flex-col items-center py-6 gap-6 z-20 relative transition-all duration-500"
+           :class="sidebarTheme">
       
       <div class="mb-2">
         <h2 class="text-xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">N<span class="text-white">OS</span></h2>
@@ -29,22 +27,20 @@
       </nav>
       
       <div class="mt-auto flex flex-col items-center gap-2">
-        <span class="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] animate-pulse" :class="engineAlert ? 'bg-red-500 text-red-500' : 'bg-emerald-500 text-emerald-500'"></span>
-        <span class="text-[9px] font-mono uppercase tracking-widest" :class="engineAlert ? 'text-red-300 font-bold' : 'text-emerald-500'">
-          {{ engineAlert ? 'SYS ERR' : 'CAN OK' }}
+        <span class="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" :class="statusDotClass"></span>
+        <span class="text-[9px] font-mono uppercase tracking-widest" :class="statusTextClass">
+          {{ systemStatusText }}
         </span>
       </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL (CLUSTER) -->
     <main class="relative flex-1 flex flex-col z-10 w-full overflow-hidden">
       
-      <div class="flex-1 w-full max-w-[1300px] mx-auto flex items-center justify-center gap-6 lg:gap-10 px-6 pb-6 mt-4">
+      <div class="flex-1 w-full max-w-[1300px] mx-auto flex items-center justify-center gap-6 lg:gap-12 px-6 pb-6 mt-4">
         
-        <!-- 1. PERIFÉRICO ESQUERDO: TEMPERATURA -->
-        <div class="flex flex-col items-center justify-center w-[80px] shrink-0 relative">
+        <div class="flex flex-col items-center justify-center w-[70px] shrink-0 relative">
           <div class="flex items-center h-[240px]">
-             <div class="flex flex-col justify-between h-[210px] text-[12px] font-bold text-right w-8 mr-2 pb-1">
+             <div class="flex flex-col justify-between h-[210px] text-[11px] font-bold text-right w-8 mr-2 pb-1">
                <span class="text-red-500 drop-shadow-md">120°</span>
                <span class="text-slate-300 drop-shadow-md">80°</span>
                <span class="text-cyan-400 drop-shadow-md">40°</span>
@@ -57,167 +53,187 @@
                    <stop offset="100%" stop-color="#ef4444" />
                  </linearGradient>
                </defs>
-               <path d="M 20 210 Q 0 110 20 10" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6" stroke-linecap="round" pathLength="100"/>
-               <path d="M 20 210 Q 0 110 20 10" fill="none" stroke="url(#tempGrad)" stroke-width="6" stroke-linecap="round"
+               <path d="M 20 210 Q 0 110 20 10" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4" stroke-linecap="round" pathLength="100"/>
+               <path d="M 20 210 Q 0 110 20 10" fill="none" stroke="url(#tempGrad)" stroke-width="4" stroke-linecap="round"
                      pathLength="100" stroke-dasharray="100" :stroke-dashoffset="100 - tempPercent" 
                      class="transition-all duration-300 ease-linear" />
              </svg>
           </div>
-          
-          <!-- Ícones Inferiores: Aumentados para maior destaque -->
           <div class="flex flex-col gap-2 mt-4 items-center">
-            <span class="text-base text-slate-400 drop-shadow-lg" :class="{'animate-bounce text-red-500': simTemp > 105}">🌡️</span>
-            <!-- Ventoinha Gigante -->
-            <svg class="w-10 h-10 transition-colors duration-300 drop-shadow-[0_0_8px_currentColor]" 
+            <svg class="w-5 h-5 drop-shadow-md transition-colors duration-300" :class="simTemp >= 103 ? 'text-red-500 animate-bounce' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1v4h-2V5z"/>
+            </svg>
+            <svg class="w-6 h-6 transition-colors duration-300 drop-shadow-[0_0_8px_currentColor]" 
                  :class="[fanColorClass, simTemp >= 98 ? 'animate-spin' : '']" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 11c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm6.2-2.12c-.28-.05-.58.04-.76.26l-1.35 1.57c-.45-.25-.94-.43-1.46-.53V7.21c0-.28-.15-.55-.4-.68l-1.89-1.02c-.21-.11-.47-.11-.68 0L9.77 6.53c-.25.13-.4.4-.4.68v2.96c-.52.1-.1.01-1.46.53L6.56 9.14c-.18-.22-.48-.31-.76-.26l-2.09.39c-.24.04-.42.22-.49.46-.07.24.01.5.2.66l1.59 1.3c-.02.19-.04.38-.04.57 0 .19.02.38.04.57l-1.59 1.3c-.19.16-.27.42-.2.66.07.24.25.42.49.46l2.09.39c.28.05.58-.04.76-.26l1.35-1.57c.45.25.94.43 1.46.53v2.96c0 .28.15.55.4.68l1.89 1.02c.21.11.47.11.68 0l1.89-1.02c.25-.13.4-.4.4-.68v-2.96c.52-.1 1.01-.28 1.46-.53l1.35 1.57c.18.22.48.31.76.26l2.09-.39c.24-.04.42-.22.49-.46.07-.24-.01-.5-.2-.66l-1.59-1.3c.02-.19.04-.38.04-.57 0-.19-.02-.38-.04-.57l1.59-1.3c.19-.16.27-.42.2-.66-.07-.24-.25-.42-.49-.46l-2.09-.39zM12 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+              <path d="M12 11c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm6.2-2.12c-.28-.05-.58.04-.76.26l-1.35 1.57c-.45-.25-.94-.43-1.46-.53V7.21c0-.28-.15-.55-.4-.68l-1.89-1.02c-.21-.11-.47-.11-.68 0L9.77 6.53c-.25.13-.4.4-.4.68v2.96c-.52.1-.1.01-1.46.53L6.56 9.14c-.18-.22-.48-.31-.76-.26l-2.09.39c-.24.04-.42.22-.49.46-.07.24.01.5.2.66l1.59 1.3c-.02.19-.04.38-.04.57 0 .19.02.38.04.57l-1.59 1.3c-.19.16-.27.42-.2.66.07.24.25.42.49.46l2.09.39c.28.05.58-.04.76-.26l1.35-1.57c.45.25.94.43 1.46.53v2.96c0 .28.15.55.4.68l1.89 1.02c.21.11.47.11.68 0l1.89-1.02c.25-.13.4-.4.4-.68v-2.96c.52-.1 1.01-.28 1.46-.53l1.35 1.57c.18.22.48.31.76.26l2.09-.39c.24-.04.42-.22.49-.46.07-.24-.01-.5-.2-.66l-1.59-1.3c.02-.19.04-.38.04-.57 0-.19-.02-.38-.04-.57l1.59-1.3c.19-.16.27-.42.2-.66-.07-.24-.25-.42-.49-.46l-2.09-.39z"/>
             </svg>
           </div>
         </div>
 
-        <!-- 2. MOSTRADOR ESQUERDO: RPM -->
-        <div class="relative w-[320px] lg:w-[340px] shrink-0 aspect-square flex items-center justify-center">
+        <div class="relative w-[340px] shrink-0 aspect-square flex items-center justify-center">
           
-          <!-- Iluminação de Fundo do Gauge (Glow Colorido) -->
-          <div class="absolute inset-4 rounded-full blur-[40px] opacity-25 transition-colors duration-500 pointer-events-none z-0" 
+          <div class="absolute inset-4 rounded-full blur-[50px] opacity-20 transition-colors duration-500 pointer-events-none z-0" 
                :style="{ backgroundColor: ecoColors.start }"></div>
 
-          <!-- Rotação Exata -144deg centraliza o progresso perfeitamente com os números -->
-          <svg viewBox="0 0 200 200" class="absolute inset-0 w-full h-full z-10" style="transform: rotate(-144deg); transform-origin: center;">
+          <svg viewBox="0 0 200 200" class="absolute inset-0 w-full h-full z-10" style="transform: rotate(135deg);">
             <defs>
               <linearGradient id="rpmArcGrad" x1="0%" y1="100%" x2="100%" y2="0%">
                 <stop offset="0%" :stop-color="ecoColors.start" style="transition: stop-color 0.4s ease" />
                 <stop offset="100%" :stop-color="ecoColors.end" style="transition: stop-color 0.4s ease" />
               </linearGradient>
             </defs>
-            <circle cx="100" cy="100" r="90" fill="none" stroke="url(#rpmArcGrad)" stroke-width="5" 
-                    stroke-dasharray="565.48" :stroke-dashoffset="565.48 - (452.39 * rpmPercent)" 
-                    class="transition-all duration-100 ease-linear drop-shadow-md" />
-            
-            <!-- Linhas Fechando o 360º (20 divisões de 18 graus) -->
-            <g v-for="i in 20" :key="`tick-${i}`" :transform="`rotate(${(i-1) * 18}, 100, 100)`">
-              <line x1="100" y1="5" x2="100" y2="15" 
-                    :stroke="(i-1) > 16 ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.6)'" stroke-width="1.5" />
-            </g>
+            <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="4" 
+                    stroke-dasharray="565.48" stroke-dashoffset="141.37" />
+            <circle cx="100" cy="100" r="90" fill="none" stroke="url(#rpmArcGrad)" stroke-width="4" stroke-linecap="round"
+                    stroke-dasharray="565.48" :stroke-dashoffset="565.48 - (424.11 * rpmPercent)" 
+                    class="transition-all duration-100 ease-linear drop-shadow-[0_0_8px_currentColor]" />
           </svg>
 
-          <!-- Números Posicionados na mesma matemática (18 graus) -->
           <div class="absolute inset-0 w-full h-full pointer-events-none z-20">
-            <div v-for="i in 17" :key="`num-${i}`" class="absolute w-full h-full flex justify-center items-start pt-0" 
-                 :style="`transform: rotate(${(i-1) * 18 - 144}deg)`">
+            <div v-for="i in 17" :key="`rpm-tick-${i}`" class="absolute w-full h-full flex justify-center items-start pt-2" 
+                 :style="`transform: rotate(${-135 + (i-1) * 16.875}deg)`">
+               
+               <div class="w-0.5 rounded-full" 
+                    :class="(i-1)/2 >= 7 ? 'bg-red-500' : 'bg-white/60'"
+                    :style="`height: ${(i-1) % 2 === 0 ? '12px' : '6px'}`"></div>
+               
                <span v-if="(i - 1) % 2 === 0" 
-                     class="text-[20px] font-black drop-shadow-md translate-y-[-36px]" 
-                     :class="(i-1)/2 >= 7 ? 'text-red-500' : 'text-slate-200'"
-                     :style="`transform: rotate(${-((i-1) * 18 - 144)}deg)`">
+                     class="absolute text-[22px] font-bold drop-shadow-md top-6" 
+                     :class="(i-1)/2 >= 7 ? 'text-red-500' : 'text-slate-100'"
+                     :style="`transform: rotate(${135 - (i-1) * 16.875}deg)`">
                   {{ (i - 1) / 2 }}
                </span>
             </div>
           </div>
 
-          <div class="civic-gauge relative z-10 w-[230px] h-[230px] rounded-full flex flex-col items-center justify-center p-6 shadow-2xl transition-colors duration-500 border border-white/5">
-            <span class="text-5xl font-bold text-white tracking-tight drop-shadow-lg mt-4">
+          <div class="civic-gauge relative z-10 w-[210px] h-[210px] rounded-full flex flex-col items-center justify-center p-6 shadow-2xl transition-colors duration-500">
+            <span class="text-6xl font-black text-white tracking-tighter drop-shadow-lg mt-4">
               {{ Math.floor(simRpm) }}
             </span>
-            <span class="text-[11px] text-slate-400 uppercase font-bold mt-1 tracking-widest">RPM</span>
+            <span class="text-[12px] text-slate-400 uppercase font-bold mt-1 tracking-widest">RPM</span>
           </div>
         </div>
 
-        <!-- 3. PAINEL CENTRAL: INFORMAÇÕES -->
-        <div class="w-[140px] shrink-0 flex flex-col justify-center items-center h-[340px] relative z-20">
-          
-          <div v-if="engineAlert" class="civic-center-card w-full p-3 text-center rounded-xl flex flex-col gap-2 border border-red-500 bg-red-950/80 animate-pulse z-50">
-             <div class="border-b border-red-500/30 pb-2">
-               <p class="text-[9px] uppercase text-red-400 tracking-widest font-black mb-1">⚠️ {{ engineAlert.type }}</p>
-               <div class="text-sm font-black text-white tracking-tight leading-tight mt-1">{{ engineAlert.title }}</div>
+        <div class="w-[200px] shrink-0 flex flex-col justify-center h-[360px] relative z-20">
+          <div class="civic-center-card w-full h-full rounded-2xl flex flex-col shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-10 overflow-hidden border border-white/5 bg-[#0a0f1c]/90 backdrop-blur-xl">
+             
+             <div class="h-16 flex items-center justify-center bg-[#111624] border-b border-white/5 relative">
+                <div v-if="simTemp >= 103" class="absolute inset-0 bg-red-500/20 animate-pulse"></div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-10 h-10 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] relative z-10" :class="simTemp >= 103 ? 'text-red-500 animate-pulse' : 'text-red-500/80'">
+                   <path d="M12 20a8 8 0 100-16 8 8 0 000 16z" stroke-width="2"/>
+                   <path d="M12 8v4" stroke-width="2.5" stroke-linecap="round"/>
+                   <circle cx="12" cy="16" r="1.5" fill="currentColor" stroke="none"/>
+                   <path d="M5.5 6.5A9.953 9.953 0 002 12c0 2.27.76 4.37 2 6" stroke-width="2" stroke-linecap="round"/>
+                   <path d="M18.5 6.5A9.953 9.953 0 0122 12c0 2.27-.76 4.37-2 6" stroke-width="2" stroke-linecap="round"/>
+                </svg>
              </div>
-             <div class="text-xl font-black text-red-500">{{ engineAlert.value }}</div>
-          </div>
 
-          <!-- Card de Status -->
-          <div v-else class="civic-center-card w-full text-center rounded-xl flex flex-col border border-white/5 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-10">
-             
-             <!-- Autonomia -->
-             <div class="py-2 border-b border-blue-400/10 px-1">
-               <p class="text-[8px] uppercase text-slate-400 tracking-widest font-bold mb-1">Autonomia Restante</p>
-               <div class="text-xl font-black text-white tracking-tight">
-                 {{ calculatedAutonomy }} <span class="text-xs text-slate-400 font-normal">km</span>
-               </div>
+             <div class="text-center py-3 border-b border-white/5">
+                <div class="text-[9px] text-slate-400 font-bold tracking-widest uppercase">Time/Telemetry Core</div>
+                <div class="text-[15px] font-bold text-white mt-1">13:14 <span class="text-slate-400 text-xs mx-1 font-normal">EXT</span> 26°C</div>
              </div>
-             
-             <!-- Bateria -->
-             <div class="py-2 border-b border-blue-400/10 px-1">
-               <p class="text-[8px] uppercase text-slate-400 tracking-widest font-bold mb-0.5">Bateria</p>
-               <div class="text-base font-bold text-slate-100">{{ simBattery.toFixed(2) }}V</div>
+
+             <div class="flex flex-col px-4 py-3 gap-4 flex-1 justify-center">
+                
+                <div class="flex items-center gap-3">
+                   <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                   </svg>
+                   <div class="flex flex-col">
+                      <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Autonomia</span>
+                      <span class="text-[15px] font-bold text-white leading-none mt-0.5">{{ calculatedAutonomy }}<span class="text-[10px] text-slate-400 font-normal ml-0.5">km</span></span>
+                   </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <svg class="w-6 h-6 text-slate-300 drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="8" width="18" height="10" rx="2" ry="2"></rect>
+                    <line x1="6" y1="8" x2="6" y2="5"></line>
+                    <line x1="18" y1="8" x2="18" y2="5"></line>
+                    <line x1="4.5" y1="5" x2="7.5" y2="5"></line>
+                    <line x1="16.5" y1="5" x2="19.5" y2="5"></line>
+                    <line x1="6.5" y1="13" x2="9.5" y2="13"></line>
+                    <line x1="14.5" y1="13" x2="17.5" y2="13"></line>
+                    <line x1="16" y1="11.5" x2="16" y2="14.5"></line>
+                  </svg>
+                  <div class="flex flex-col">
+                      <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Bateria</span>
+                      <span class="text-[15px] font-bold text-white leading-none mt-0.5">{{ simBattery.toFixed(2) }}<span class="text-[10px] text-slate-400 font-normal ml-0.5">V</span></span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <svg class="w-6 h-6 text-slate-300 drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 22L14 22M5 22V6C5 4.89543 5.89543 4 7 4H11C12.1046 4 13 4.89543 13 6V22M7 8H11V12H7V8ZM13 14H16.5C17.8807 14 19 15.1193 19 16.5V17.5C19 18.8807 17.8807 20 16.5 20C15.1193 20 14 18.8807 14 17.5V17M16 10V9C16 7.89543 16.8954 7 18 7H19C20.1046 7 21 7.89543 21 9V12C21 13.1046 20.1046 14 19 14H16"></path>
+                    <path d="M18 2C18 2 16 4 16 5.5C16 6.88071 16.8954 8 18 8C19.1046 8 20 6.88071 20 5.5C20 4 18 2 18 2Z" fill="currentColor" stroke="none"></path>
+                  </svg>
+                  <div class="flex flex-col">
+                      <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Consumo</span>
+                      <span class="text-[15px] font-bold text-white leading-none mt-0.5">13.4<span class="text-[10px] text-slate-400 font-normal ml-0.5">km/l</span></span>
+                  </div>
+                </div>
              </div>
-             
-             <!-- Consumo -->
-             <div class="py-2 border-b border-blue-400/10 px-1">
-               <p class="text-[8px] uppercase text-slate-400 tracking-widest font-bold mb-0.5">Consumo</p>
-               <div class="text-base font-bold text-slate-100">13.4 <span class="text-[10px] font-normal text-slate-400">km/l</span></div>
-             </div>
-             
-             <!-- Temp Motor (Com Alerta de Cor e Fundo Isolado) -->
-             <div class="pt-2 px-1 pb-1 mt-1 transition-all duration-300 rounded-b-lg" 
-                  :class="simTemp >= 103 ? 'bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.3)] border border-red-500/30' : ''">
-               <p class="text-[8px] uppercase tracking-widest font-bold mb-0.5 transition-colors duration-300" 
-                  :class="simTemp >= 103 ? 'text-red-300' : 'text-slate-400'">Temp. Motor</p>
-               <div class="text-base transition-colors duration-300" 
-                    :class="simTemp >= 103 ? 'text-red-500 font-black drop-shadow-[0_0_5px_currentColor]' : 'text-slate-100 font-bold'">
-                 {{ Math.floor(simTemp) }}°C
-               </div>
+
+             <div class="border-t transition-colors duration-500 p-4 flex items-center gap-3" 
+                  :class="simTemp >= 103 ? 'border-red-500/30 bg-red-950/60 shadow-[inset_0_0_20px_rgba(220,38,38,0.3)]' : 'border-white/5 bg-[#0d1222]'">
+                <svg class="w-6 h-6 drop-shadow-md transition-colors duration-500" :class="simTemp >= 103 ? 'text-red-500 animate-pulse' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1v4h-2V5z"/>
+                </svg>
+                <div class="flex flex-col">
+                   <span class="text-[9px] uppercase font-bold tracking-widest transition-colors duration-500" :class="simTemp >= 103 ? 'text-red-400' : 'text-slate-400'">Temp. Motor</span>
+                   <span class="text-lg font-black leading-none mt-1 transition-colors duration-500 drop-shadow-md" :class="simTemp >= 103 ? 'text-red-500' : 'text-white'">
+                     {{ Math.floor(simTemp) }}°C
+                   </span>
+                </div>
              </div>
           </div>
         </div>
 
-        <!-- 4. MOSTRADOR DIREITO: VELOCIDADE -->
-        <div class="relative w-[320px] lg:w-[340px] shrink-0 aspect-square flex items-center justify-center">
+        <div class="relative w-[340px] shrink-0 aspect-square flex items-center justify-center">
           
-          <!-- Iluminação de Fundo do Gauge (Glow Colorido) -->
-          <div class="absolute inset-4 rounded-full blur-[40px] opacity-25 transition-colors duration-500 pointer-events-none z-0" 
+          <div class="absolute inset-4 rounded-full blur-[50px] opacity-20 transition-colors duration-500 pointer-events-none z-0" 
                :style="{ backgroundColor: ecoColors.start }"></div>
 
-          <!-- Rotação -132deg para o alinhamento de 220km/h com 30 divisões -->
-          <svg viewBox="0 0 200 200" class="absolute inset-0 w-full h-full z-10" style="transform: rotate(-132deg); transform-origin: center;">
+          <svg viewBox="0 0 200 200" class="absolute inset-0 w-full h-full z-10" style="transform: rotate(135deg);">
             <defs>
               <linearGradient id="speedArcGrad" x1="0%" y1="100%" x2="100%" y2="0%">
                 <stop offset="0%" :stop-color="ecoColors.start" style="transition: stop-color 0.4s ease" />
                 <stop offset="100%" :stop-color="ecoColors.end" style="transition: stop-color 0.4s ease" />
               </linearGradient>
             </defs>
-            <circle cx="100" cy="100" r="90" fill="none" stroke="url(#speedArcGrad)" stroke-width="5" 
-                    stroke-dasharray="565.48" :stroke-dashoffset="565.48 - (414.68 * speedPercent)" 
-                    class="transition-all duration-100 ease-linear drop-shadow-md" />
-
-            <!-- Linhas Fechando o 360º (30 divisões de 12 graus) -->
-            <g v-for="i in 30" :key="`spd-tick-${i}`" :transform="`rotate(${(i-1) * 12}, 100, 100)`">
-               <line x1="100" y1="5" x2="100" y2="15" 
-                     :stroke="(i-1) > 22 ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.6)'" stroke-width="1.5" />
-            </g>
+            <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="4" 
+                    stroke-dasharray="565.48" stroke-dashoffset="141.37" />
+            <circle cx="100" cy="100" r="90" fill="none" stroke="url(#speedArcGrad)" stroke-width="4" stroke-linecap="round"
+                    stroke-dasharray="565.48" :stroke-dashoffset="565.48 - (424.11 * speedPercent)" 
+                    class="transition-all duration-100 ease-linear drop-shadow-[0_0_8px_currentColor]" />
           </svg>
 
-          <!-- Números Posicionados na mesma matemática (12 graus) -->
           <div class="absolute inset-0 w-full h-full pointer-events-none z-20">
-            <div v-for="i in 23" :key="`spd-num-${i}`" class="absolute w-full h-full flex justify-center items-start pt-0" 
-                 :style="`transform: rotate(${(i-1) * 12 - 132}deg)`">
-               <span v-if="((i - 1) * 10) % 20 === 0" 
-                     class="text-[17px] font-black text-slate-200 drop-shadow-md translate-y-[-34px]" 
-                     :style="`transform: rotate(${-((i-1) * 12 - 132)}deg)`">
+            <div v-for="i in 23" :key="`spd-tick-${i}`" class="absolute w-full h-full flex justify-center items-start pt-2" 
+                 :style="`transform: rotate(${-135 + (i-1) * 12.2727}deg)`">
+               
+               <div class="w-0.5 rounded-full" 
+                    :class="(i-1)*10 >= 200 ? 'bg-red-500' : 'bg-white/60'"
+                    :style="`height: ${(i-1) % 2 === 0 ? '12px' : '6px'}`"></div>
+               
+               <span v-if="(i - 1) % 2 === 0" 
+                     class="absolute text-[18px] font-bold drop-shadow-md top-6" 
+                     :class="(i-1)*10 >= 200 ? 'text-red-500' : 'text-slate-100'"
+                     :style="`transform: rotate(${135 - (i-1) * 12.2727}deg)`">
                   {{ (i - 1) * 10 }}
                </span>
             </div>
           </div>
 
-          <div class="civic-gauge relative z-10 w-[230px] h-[230px] rounded-full flex flex-col items-center justify-center p-6 text-center transition-colors duration-500 shadow-2xl border border-white/5">
-            <span class="text-[5rem] leading-none font-black text-white tracking-tighter drop-shadow-lg mt-2">
+          <div class="civic-gauge relative z-10 w-[210px] h-[210px] rounded-full flex flex-col items-center justify-center p-6 text-center transition-colors duration-500 shadow-2xl">
+            <span class="text-6xl leading-none font-black text-white tracking-tighter drop-shadow-lg mt-4">
               {{ Math.floor(simSpeed) }}
             </span>
-            <span class="text-[12px] text-slate-400 font-bold uppercase tracking-widest mt-1">km/h</span>
-            <span class="text-[11px] font-bold text-slate-200 mt-4 tracking-widest">NW</span>
+            <span class="text-[12px] text-slate-400 font-bold uppercase tracking-widest mt-2">km/h</span>
           </div>
         </div>
 
-        <!-- 5. PERIFÉRICO DIREITO: COMBUSTÍVEL -->
-        <div class="flex flex-col items-center justify-center w-[80px] shrink-0 relative">
+        <div class="flex flex-col items-center justify-center w-[70px] shrink-0 relative">
           <div class="flex items-center h-[240px]">
              <svg width="24" height="220" viewBox="0 0 24 220" class="drop-shadow-md">
                <defs>
@@ -227,12 +243,12 @@
                    <stop offset="100%" stop-color="#3b82f6" />
                  </linearGradient>
                </defs>
-               <path d="M 4 210 Q 24 110 4 10" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6" stroke-linecap="round" pathLength="100"/>
-               <path d="M 4 210 Q 24 110 4 10" fill="none" stroke="url(#fuelGrad)" stroke-width="6" stroke-linecap="round"
+               <path d="M 4 210 Q 24 110 4 10" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4" stroke-linecap="round" pathLength="100"/>
+               <path d="M 4 210 Q 24 110 4 10" fill="none" stroke="url(#fuelGrad)" stroke-width="4" stroke-linecap="round"
                      pathLength="100" stroke-dasharray="100" :stroke-dashoffset="100 - simFuel" 
                      class="transition-all duration-1000 ease-linear" />
              </svg>
-             <div class="flex flex-col justify-between h-[210px] text-[12px] font-bold text-left w-8 ml-2 pb-1 text-slate-300">
+             <div class="flex flex-col justify-between h-[210px] text-[11px] font-bold text-left w-8 ml-2 pb-1 text-slate-300">
                <span>F</span>
                <span>3/4</span>
                <span>1/2</span>
@@ -240,7 +256,11 @@
                <span class="text-red-500">E</span>
              </div>
           </div>
-          <span class="text-xs mt-3 opacity-60">⛽</span>
+          <div class="flex items-center justify-center mt-4">
+             <svg class="w-5 h-5 text-slate-400 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 8h-1V6c0-1.1-.9-2-2-2H6C4.9 4 4 4.9 4 6v12h12v-2h2v2h2c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-5 10H6V6h8v12zm4-6h-2V6h2v6z"/>
+             </svg>
+          </div>
         </div>
 
       </div>
@@ -253,7 +273,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 // --- ESTADOS DOS SENSORES ---
 const simSpeed = ref(0);
-const simRpm = ref(800);
+const simRpm = ref(0); // Agora iniciando efetivamente de 0
 const simLoad = ref(15);
 const simTemp = ref(90);  
 const simFuel = ref(58);
@@ -263,8 +283,9 @@ const simEcon = ref(9.4);
 let simulationInterval = null;
 let isAccelerating = true;
 let isHeating = true;
+let engineStarted = false; // Flag para fazer a transição de 0 até a lenta
 
-// --- CÁLCULOS (Ajustados para frações exatas com a nova matemática de arcos) ---
+// --- CÁLCULOS EXATOS DE PROGRESSO ---
 const rpmPercent = computed(() => {
   const clamped = Math.min(Math.max(simRpm.value, 0), 8000);
   return clamped / 8000;
@@ -280,15 +301,15 @@ const calculatedAutonomy = computed(() => Math.floor(((simFuel.value / 100) * 55
 
 // --- CORES DINÂMICAS: ECO DRIVING ---
 const ecoColors = computed(() => {
-  if (simRpm.value > 3500 || simLoad.value > 65) {
-    return { start: '#ef4444', end: '#991b1b' }; // Vermelho
-  } else if (simRpm.value > 2500 || simLoad.value > 35) {
+  if (simRpm.value > 6500 || simLoad.value > 75) {
+    return { start: '#ef4444', end: '#b91c1c' }; // Vermelho Forte
+  } else if (simRpm.value > 4500 || simLoad.value > 45) {
     return { start: '#eab308', end: '#a16207' }; // Amarelo
   }
-  return { start: '#3b82f6', end: '#1d4ed8' };   // Azul
+  return { start: '#3b82f6', end: '#1d4ed8' };   // Azul Profundo
 });
 
-// --- VENTOINHA E ALERTAS ---
+// --- LÓGICA DE CORES: VENTOINHA E SIDEBAR ---
 const fanColorClass = computed(() => {
   if (simTemp.value >= 103) return 'text-red-500 opacity-100';
   if (simTemp.value >= 100) return 'text-yellow-400 opacity-100';
@@ -296,16 +317,53 @@ const fanColorClass = computed(() => {
   return 'text-slate-500 opacity-30';
 });
 
-const engineAlert = computed(() => {
-  if (simTemp.value >= 105) {
-    return { type: 'CRÍTICO', title: 'AQUECIMENTO', value: `${Math.floor(simTemp.value)}°C` };
+const sidebarTheme = computed(() => {
+  if (simTemp.value >= 103) {
+    return 'bg-red-950/80 border-red-500/50 shadow-[4px_0_30px_rgba(220,38,38,0.3)] animate-pulse';
   }
-  return null;
+  if (simTemp.value >= 100) {
+    return 'bg-yellow-950/80 border-yellow-500/50 shadow-[4px_0_30px_rgba(234,179,8,0.2)]';
+  }
+  return 'bg-[#020510]/90 border-white/5 shadow-[4px_0_24px_rgba(0,0,0,0.5)] backdrop-blur-xl';
+});
+
+const statusDotClass = computed(() => {
+  if (simTemp.value >= 103) return 'bg-red-500 text-red-500 animate-pulse';
+  if (simTemp.value >= 100) return 'bg-yellow-400 text-yellow-400';
+  return 'bg-emerald-500 text-emerald-500 animate-pulse';
+});
+
+const statusTextClass = computed(() => {
+  if (simTemp.value >= 103) return 'text-red-300 font-bold';
+  if (simTemp.value >= 100) return 'text-yellow-300 font-bold';
+  return 'text-emerald-500';
+});
+
+const systemStatusText = computed(() => {
+  if (simTemp.value >= 103) return 'SYS ERR';
+  if (simTemp.value >= 100) return 'WARN';
+  return 'CAN OK';
 });
 
 // --- CICLO DA SIMULAÇÃO ---
 onMounted(() => {
+  
+  // Sequência de partida do motor (Sobe do 0 para lenta)
+  setTimeout(() => {
+    let startupInterval = setInterval(() => {
+      if (simRpm.value < 800) {
+        simRpm.value += 120;
+      } else {
+        simRpm.value = 800;
+        engineStarted = true;
+        clearInterval(startupInterval);
+      }
+    }, 50);
+  }, 1000);
+
   simulationInterval = setInterval(() => {
+    if (!engineStarted) return;
+
     // 1. Temperatura
     if (isHeating) {
       simTemp.value += 0.15;
@@ -317,24 +375,24 @@ onMounted(() => {
 
     // 2. Comportamento do Motor
     if (isAccelerating) {
-      simSpeed.value += 0.7;
-      simRpm.value += 44;
+      simSpeed.value += 1.2;
+      simRpm.value += 65;
       simLoad.value = Math.min(simLoad.value + 3, 85);
       
-      if (simRpm.value > 3500) {
-        simRpm.value = 1900; 
+      if (simRpm.value > 4500) {
+        simRpm.value = 2200; 
         simLoad.value = 30;
       }
-      if (simSpeed.value > 125) isAccelerating = false;
+      if (simSpeed.value > 140) isAccelerating = false;
     } else {
-      simSpeed.value -= 0.4;
-      simRpm.value -= 22;
+      simSpeed.value -= 0.8;
+      simRpm.value -= 35;
       simLoad.value = Math.max(simLoad.value - 2, 10);
-      if (simSpeed.value < 38) isAccelerating = true;
+      if (simSpeed.value < 45) isAccelerating = true;
     }
 
     if (simSpeed.value < 0) simSpeed.value = 0;
-    if (simRpm.value < 800) simRpm.value = 800;
+    if (simRpm.value < 800 && engineStarted) simRpm.value = 800;
     simBattery.value = 13.60 + (Math.random() * 0.1 - 0.05);
 
   }, 100);
@@ -347,26 +405,21 @@ onUnmounted(() => {
 
 <style scoped>
 .civic-cluster-bg {
-  background-color: #040914; 
+  background-color: #020611; /* Mais escuro para destacar o neon e combinar com a imagem */
 }
 
 .grid-overlay {
   background-image: 
-    linear-gradient(rgba(59, 130, 246, 0.2) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.2) 1px, transparent 1px);
-  background-size: 50px 50px;
+    linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+  background-size: 60px 60px;
   background-position: center top;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 50%);
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 50%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 60%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 60%);
   pointer-events: none;
 }
 
 .civic-gauge {
-  background: radial-gradient(circle at center, rgba(14, 30, 64, 0.95) 0%, rgba(4, 9, 23, 1) 100%);
-}
-
-.civic-center-card {
-  background: rgba(4, 9, 23, 0.7);
-  backdrop-filter: blur(8px);
+  background: radial-gradient(circle at center, rgba(14, 30, 64, 0.8) 0%, rgba(4, 9, 23, 1) 100%);
 }
 </style>
