@@ -324,29 +324,23 @@
           <!-- Grid de Sensores com Barras de Estado Dinâmicas -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
             
-            <!-- Card Exemplo (Carga do Motor): O padrão para todos -->
+            <!-- Card 1: Carga Motor -->
             <div @click="openInfo('load')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
               <div class="flex justify-between items-center mb-1">
                 <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Carga Motor</div>
-                <!-- Badge de Estado -->
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" 
-                      :class="simLoad <= 30 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'">
-                  {{ simLoad <= 30 ? 'NORMAL' : 'ALTA' }}
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300" 
+                      :class="simLoad <= 40 ? 'bg-emerald-500/20 text-emerald-400' : (simLoad <= 80 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')">
+                  {{ simLoad <= 40 ? 'NORMAL' : (simLoad <= 80 ? 'ATENÇÃO' : 'ALTA') }}
                 </span>
               </div>
-              
               <div class="text-3xl font-black text-white">{{ Math.floor(simLoad) }}<span class="text-lg text-slate-500 ml-1">%</span></div>
-              
-              <!-- Barra de Estado (Verde -> Amarelo -> Vermelho) -->
               <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
                 <div class="h-full transition-all duration-300" 
-                    :class="simLoad <= 30 ? 'bg-emerald-500' : (simLoad <= 70 ? 'bg-amber-500' : 'bg-red-500')" 
-                    :style="{ width: `${Math.min(simLoad, 100)}%` }"></div>
+                    :class="simLoad <= 40 ? 'bg-emerald-500' : (simLoad <= 80 ? 'bg-amber-500' : 'bg-red-500')" 
+                    :style="{ width: `${Math.max(0, Math.min(simLoad, 100))}%` }"></div>
               </div>
               <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>0%</span>
-                <span>30% (OK)</span>
-                <span>100%</span>
+                <span>0%</span><span>40% (OK)</span><span>100%</span>
               </div>
             </div>
 
@@ -354,16 +348,19 @@
             <div @click="openInfo('maf')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
               <div class="flex justify-between items-center mb-1">
                 <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Fluxo Ar (MAF)</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">OK</span>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300"
+                      :class="(simRpm * 0.005) <= 6 ? 'bg-emerald-500/20 text-emerald-400' : ((simRpm * 0.005) <= 8.5 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')">
+                  {{ (simRpm * 0.005) <= 6 ? 'OK' : 'ALTO' }}
+                </span>
               </div>
               <div class="text-3xl font-black text-white">{{ (simRpm * 0.005).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">g/s</span></div>
               <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
-                <div class="h-full bg-emerald-500 transition-all duration-300" :style="{ width: `${Math.min((simRpm * 0.005) * 10, 100)}%` }"></div>
+                <div class="h-full transition-colors duration-300" 
+                    :class="(simRpm * 0.005) <= 6 ? 'bg-emerald-500' : ((simRpm * 0.005) <= 8.5 ? 'bg-amber-500' : 'bg-red-500')"
+                    :style="{ width: `${Math.max(0, Math.min(((simRpm * 0.005) / 10) * 100, 100))}%` }"></div>
               </div>
               <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>2g/s</span>
-                <span>7g/s (OK)</span>
-                <span>10g/s</span>
+                <span>2g/s</span><span>6g/s (OK)</span><span>10g/s</span>
               </div>
             </div>
 
@@ -371,38 +368,39 @@
             <div @click="openInfo('tps')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
               <div class="flex justify-between items-center mb-1">
                 <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Borboleta (TPS)</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" 
-                      :class="(simLoad * 0.8) <= 10 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'">
-                  {{ (simLoad * 0.8) <= 10 ? 'LENTA' : 'ATIVA' }}
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300" 
+                      :class="(simLoad * 0.8) <= 15 ? 'bg-emerald-500/20 text-emerald-400' : ((simLoad * 0.8) <= 70 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')">
+                  {{ (simLoad * 0.8) <= 15 ? 'LENTA' : ((simLoad * 0.8) <= 70 ? 'ATIVA' : 'TOTAL') }}
                 </span>
               </div>
               <div class="text-3xl font-black text-white">{{ (simLoad * 0.8).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">%</span></div>
               <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
                 <div class="h-full transition-all duration-300" 
-                    :class="(simLoad * 0.8) <= 10 ? 'bg-emerald-500' : 'bg-blue-500'" 
-                    :style="{ width: `${Math.min(simLoad * 0.8, 100)}%` }"></div>
+                    :class="(simLoad * 0.8) <= 15 ? 'bg-emerald-500' : ((simLoad * 0.8) <= 70 ? 'bg-amber-500' : 'bg-red-500')" 
+                    :style="{ width: `${Math.max(0, Math.min(simLoad * 0.8, 100))}%` }"></div>
               </div>
               <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>0%</span>
-                <span>10% (Lenta)</span>
-                <span>100%</span>
+                <span>0%</span><span>15% (Lenta)</span><span>100%</span>
               </div>
             </div>
 
-            <!-- Card 4: Sonda Lambda -->
+            <!-- Card 4: Sonda Lambda (Corrigido para evitar travamento) -->
             <div @click="openInfo('lambda')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
               <div class="flex justify-between items-center mb-1">
                 <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sonda Lambda</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">OSCILANDO</span>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300"
+                      :class="(simLambda || 0.45) > 0.3 && (simLambda || 0.45) < 0.7 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'">
+                  OSCILANDO
+                </span>
               </div>
-              <div class="text-3xl font-black text-white">{{ (0.1 + Math.random() * 0.8).toFixed(2) }}<span class="text-lg text-slate-500 ml-1">V</span></div>
+              <div class="text-3xl font-black text-white">{{ (simLambda || 0.45).toFixed(2) }}<span class="text-lg text-slate-500 ml-1">V</span></div>
               <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
-                <div class="h-full bg-purple-500 transition-all duration-300" style="width: 50%;"></div>
+                <div class="h-full transition-all duration-100" 
+                    :class="(simLambda || 0.45) > 0.3 && (simLambda || 0.45) < 0.7 ? 'bg-emerald-500' : ((simLambda || 0.45) <= 0.3 ? 'bg-blue-500' : 'bg-red-500')"
+                    :style="{ width: `${Math.max(0, Math.min((((simLambda || 0.45) - 0.1) / 0.8) * 100, 100))}%` }"></div>
               </div>
               <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>0.1V</span>
-                <span>0.5V (OK)</span>
-                <span>0.9V</span>
+                <span>0.1V</span><span>0.5V (Ideal)</span><span>0.9V</span>
               </div>
             </div>
 
@@ -410,21 +408,19 @@
             <div @click="openInfo('timing')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
               <div class="flex justify-between items-center mb-1">
                 <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ignição</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" 
-                      :class="(10 + (simRpm * 0.003)) <= 15 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'">
-                  {{ (10 + (simRpm * 0.003)) <= 15 ? 'OK' : 'AVANÇADO' }}
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300" 
+                      :class="(10 + (simRpm * 0.003)) <= 20 ? 'bg-emerald-500/20 text-emerald-400' : ((10 + (simRpm * 0.003)) <= 35 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')">
+                  {{ (10 + (simRpm * 0.003)) <= 20 ? 'OK' : 'AVANÇADO' }}
                 </span>
               </div>
               <div class="text-3xl font-black text-white">{{ (10 + (simRpm * 0.003)).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">°</span></div>
               <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
                 <div class="h-full transition-all duration-300" 
-                    :class="(10 + (simRpm * 0.003)) <= 15 ? 'bg-emerald-500' : 'bg-amber-500'" 
-                    style="width: 40%;"></div>
+                    :class="(10 + (simRpm * 0.003)) <= 20 ? 'bg-emerald-500' : ((10 + (simRpm * 0.003)) <= 35 ? 'bg-amber-500' : 'bg-red-500')" 
+                    :style="{ width: `${Math.max(0, Math.min((((10 + (simRpm * 0.003)) - 5) / 40) * 100, 100))}%` }"></div>
               </div>
               <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>5°</span>
-                <span>15° (OK)</span>
-                <span>45°</span>
+                <span>5°</span><span>20° (OK)</span><span>45°</span>
               </div>
             </div>
 
@@ -432,16 +428,19 @@
             <div @click="openInfo('iat')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
               <div class="flex justify-between items-center mb-1">
                 <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Temp. Admissão</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">OK</span>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300"
+                      :class="(simIat || 35) <= 50 ? 'bg-emerald-500/20 text-emerald-400' : ((simIat || 35) <= 80 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')">
+                  {{ (simIat || 35) <= 50 ? 'OK' : 'ALTA' }}
+                </span>
               </div>
-              <div class="text-3xl font-black text-white">35<span class="text-lg text-slate-500 ml-1">°C</span></div>
+              <div class="text-3xl font-black text-white">{{ Math.floor(simIat || 35) }}<span class="text-lg text-slate-500 ml-1">°C</span></div>
               <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
-                <div class="h-full bg-cyan-500 transition-all duration-300" style="width: 35%;"></div>
+                <div class="h-full transition-all duration-300" 
+                    :class="(simIat || 35) <= 50 ? 'bg-emerald-500' : ((simIat || 35) <= 80 ? 'bg-amber-500' : 'bg-red-500')"
+                    :style="{ width: `${Math.max(0, Math.min((((simIat || 35) - 20) / 100) * 100, 100))}%` }"></div>
               </div>
               <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>20°C</span>
-                <span>60°C (OK)</span>
-                <span>120°C</span>
+                <span>20°C</span><span>50°C (OK)</span><span>120°C</span>
               </div>
             </div>
           </div>
@@ -523,6 +522,26 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 
+// Variável para guardar a referência do nosso "timer"
+let lambdaTimer = null;
+
+// onMounted roda assim que a tela carrega
+onMounted(() => {
+  // Cria um loop que roda a cada 600 milissegundos
+  lambdaTimer = setInterval(() => {
+    
+    // A sonda de banda estreita costuma oscilar entre 0.1v (pobre) e 0.9v (rica).
+    // O Math.random() gera a aleatoriedade da simulação.
+    simLambda.value = 0.1 + Math.random() * 0.8;
+    
+  }, 600); 
+});
+
+// onUnmounted roda quando você sai dessa tela
+onUnmounted(() => {
+  // É importante limpar o timer para não pesar a memória do navegador
+  if (lambdaTimer) clearInterval(lambdaTimer);
+});
 // --- ESTADO DE ROTEAMENTO (NOVO) ---
 const activeView = ref('painel'); 
 
@@ -584,6 +603,8 @@ const simTemp = ref(90);
 const simFuel = ref(58);
 const simBattery = ref(13.60);
 const simEcon = ref(9.4);
+const simLambda = ref(0.45);
+const simIat = ref(35);
 
 let simulationInterval = null;
 let isAccelerating = true;
