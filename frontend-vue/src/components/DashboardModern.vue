@@ -295,31 +295,13 @@
       <!-- ============================================== -->
       <!-- TELA 2: DIAGNÓSTICO OBD-II -->
       <!-- ============================================== -->
-      <div v-if="activeView === 'obd'" class="absolute inset-0 z-50 flex items-center justify-center bg-[#020611]/95 backdrop-blur-sm p-8 overflow-y-auto">
-        <div class="w-full max-w-5xl bg-[#0a0f1c] border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col gap-8 relative overflow-hidden">
+      <div v-if="activeView === 'obd'" class="absolute inset-0 z-50 flex items-center justify-center bg-[#020611]/95 backdrop-blur-sm p-3 overflow-y-auto">
+        <div class="w-full max-w-5xl bg-[#0a0f1c] border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col gap-4 relative overflow-hidden">
           
           <!-- Elemento decorativo -->
           <div class="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-          <!-- Cabeçalho OBD -->
-          <div class="flex items-center justify-between border-b border-white/5 pb-6 relative z-10">
-            <div class="flex items-center gap-4">
-              <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
-                <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                </svg>
-              </div>
-              <div>
-                <h2 class="text-2xl font-black text-white tracking-tight">Telemetria de Motor e OBD-II</h2>
-                <p class="text-slate-400 text-sm mt-1">Leitura em tempo real dos sensores eletrônicos.</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center gap-3 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="text-emerald-400 font-mono text-xs uppercase font-bold tracking-widest">Interface CAN Ativa</span>
-            </div>
-          </div>
+
 
           <!-- Grid de Sensores com Barras de Estado Dinâmicas -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
@@ -445,7 +427,7 @@
             </div>
           </div>
 
-          <!-- MÓDULO DE INJEÇÃO DE FALHAS (Excelente para fins didáticos/demonstração) -->
+          <!-- MÓDULO DE INJEÇÃO DE FALHAS (Excelente para fins didáticos/demonstração) 
           <div class="bg-[#111624] border border-white/5 rounded-2xl p-4 mb-6 relative z-10">
             <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3">Injetor de Falhas (Simulador)</div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -463,21 +445,21 @@
               </button>
             </div>
           </div>
-
-          <!-- GRID DE DIAGNÓSTICO AVANÇADO (Substitua todo o bloco anterior por este) -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 relative z-10">
+-->
+          <!-- GRID DE DIAGNÓSTICO AVANÇADO (OTIMIZADO PARA 10 POLEGADAS) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-1 relative z-10">
             
-            <!-- Card 1: Painel Preventivo de Velas -->
-            <div class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
+            <!-- Card 1: Análise de Ignição -->
+            <div class="bg-[#111624] border border-white/5 rounded-2xl p-3 flex flex-col justify-between">
               <div>
-                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Análise de Ignição (Velas)</div>
-                <div class="text-xl font-black mt-2" :class="sparkPlugHealth >= 85 ? 'text-emerald-400' : (sparkPlugHealth >= 50 ? 'text-amber-400' : 'text-red-500')">
+                <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Análise de Ignição (Velas)</div>
+                <div class="text-base font-black mt-1" :class="sparkPlugHealth >= 85 ? 'text-emerald-400' : (sparkPlugHealth >= 50 ? 'text-amber-400' : 'text-red-500')">
                   {{ diagnosticReport.plugStatus }}
                 </div>
               </div>
-              <div class="mt-4">
-                <div class="flex justify-between text-[10px] text-slate-500 mb-1">
-                  <span>Vida Útil Estimada</span>
+              <div class="mt-2">
+                <div class="flex justify-between text-[9px] text-slate-500 mb-1">
+                  <span>Vida Útil</span>
                   <span>{{ sparkPlugHealth }}%</span>
                 </div>
                 <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -486,84 +468,91 @@
               </div>
             </div>
 
-            <!-- Card 2: NOVO Localizador de Cilindro (ESTE É O QUE PISCA SE HOUVER FALHA) -->
+            <!-- Card 2: Misfire Monitor -->
             <div @click="openInfo('misfire')" 
-                class="bg-[#111624] border rounded-2xl p-5 transition-all cursor-pointer hover:bg-white/5 flex flex-col justify-between"
-                :class="diagnosticReport.suspectCylinder ? 'border-red-500/50 animate-pulse bg-red-950/10' : 'border-white/5'">
+                class="border rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all duration-300"
+                :class="diagnosticReport.suspectCylinder ? 'bg-red-950/40 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse' : 'bg-[#111624] border-white/5 hover:bg-white/5'">
               
               <div>
-                <div class="flex justify-between items-center mb-3">
-                  <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Misfire Monitor (Por Cilindro)</div>
-                  <span v-if="diagnosticReport.suspectCylinder" class="text-[9px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
-                    FALHA ATIVA
+                <div class="flex justify-between items-center mb-2">
+                  <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Misfire Monitor</div>
+                  <span v-if="diagnosticReport.suspectCylinder" class="text-[8px] bg-red-600 text-white px-2 py-0.5 rounded-full font-bold animate-bounce">
+                    FALHA CRÍTICA
                   </span>
                 </div>
 
-                <div class="grid grid-cols-4 gap-2 text-center">
-                  <div v-for="(misfires, index) in cylinderMisfires" :key="index" class="p-2 rounded-xl border bg-slate-900/40 border-white/5">
-                    <div class="text-[10px] font-bold text-slate-400">CIL {{ index + 1 }}</div>
-                    <div class="text-lg font-black mt-1" :class="misfires > 0 ? 'text-red-400' : 'text-slate-600'">
-                      {{ misfires > 0 ? 'FAIL' : 'OK' }}
-                    </div>
+                <div class="grid grid-cols-4 gap-1.5 text-center">
+                  <div v-for="(misfires, index) in cylinderMisfires" :key="index" class="p-1 rounded-lg border transition-all"
+                      :class="diagnosticReport.suspectCylinder === (index + 1) ? 'bg-red-500/20 border-red-500 text-red-400' : 'bg-slate-900/40 border-white/5 text-slate-600'">
+                    <div class="text-[9px] font-bold" :class="diagnosticReport.suspectCylinder === (index + 1) ? 'text-red-300' : 'text-slate-400'">CIL {{ index + 1 }}</div>
+                    <div class="text-sm font-black">{{ misfires > 0 ? 'FAIL' : 'OK' }}</div>
                   </div>
                 </div>
               </div>
-              
-              <div class="text-[9px] text-slate-500 text-right mt-3 font-mono">Clique para ver o diagnóstico →</div>
             </div>
 
-            <!-- Card 3: Monitor de Qualidade de Combustível -->
-            <div @click="openInfo('fuel')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col justify-between cursor-pointer hover:bg-white/5 transition-all">
+            <!-- Card 3: Qualidade de Combustível -->
+            <div @click="openInfo('fuel')" 
+                class="border rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all duration-300"
+                :class="diagnosticReport.fuelStatus.includes('Suspeito') ? 'bg-amber-950/30 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-[#111624] border-white/5 hover:bg-white/5'">
+              
               <div>
-                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Análise de Combustível</div>
-                <div class="text-xl font-black mt-2" :class="fuelQualityScore >= 80 ? 'text-emerald-400' : (fuelQualityScore >= 50 ? 'text-amber-500' : 'text-red-500')">
+                <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Qualidade de Combustível</div>
+                <div class="text-base font-black mt-1 leading-tight" 
+                    :class="diagnosticReport.fuelStatus.includes('Suspeito') ? 'text-amber-400 animate-pulse' : 'text-emerald-400'">
                   {{ diagnosticReport.fuelStatus }}
                 </div>
               </div>
-              <div class="mt-3 text-[9px] text-slate-500 leading-relaxed bg-slate-900/50 p-2 rounded-lg border border-white/5 font-mono">
-                <span>Fator de Cruzamento:<br></span>
-                <span :class="simulationMode === 'combustivel_ruim' ? 'text-amber-400' : 'text-slate-400'">
-                  • Carga Motor + Atraso de Ignição Ativo (Knock Retard)
-                </span>
-              </div>
-            </div>
-
-          </div>    
-
-
-
-
-          <!-- Códigos de Falha (DTC) -->
-          <div class="bg-[#111624] border border-white/5 rounded-2xl p-6 relative z-10">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Diagnostic Trouble Codes (DTC)</h3>
-            
-            <div v-if="simTemp < 103" class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-4">
-              <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-              <div class="text-sm font-bold text-emerald-400">Nenhum código de falha detectado no módulo do motor.</div>
-            </div>
-            
-            <div v-else class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex flex-col gap-2">
-              <div class="flex items-center gap-4">
-                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                <div class="text-sm font-bold text-red-400">Falha detectada. Verifique o sistema de arrefecimento.</div>
-              </div>
-              <div class="mt-2 text-xs font-mono bg-black/50 p-3 rounded-lg text-slate-300">
-                <span class="text-red-400 font-bold">P0118</span> - Engine Coolant Temperature Sensor 1 Circuit High
+              <div class="mt-2 text-[8px] leading-tight p-1.5 rounded-md border font-mono transition-colors"
+                  :class="diagnosticReport.fuelStatus.includes('Suspeito') ? 'bg-amber-900/40 border-amber-500/50 text-amber-200' : 'bg-slate-900/50 border-white/5 text-slate-500'">
+                Cruzamento Automático: Carga x Avanço
               </div>
             </div>
 
           </div>
 
+
+<!-- Cabeçalho / Título (Compacto) -->
+      <div class="mb-2 flex justify-between items-center z-10">
+        <div>
+          <h1 class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+            Diagnóstico Dinâmico
+          </h1>
+          <p class="text-[10px] text-slate-500 font-mono">OBD-II DATA STREAM • TEMPO REAL</p>
+        </div>
+      </div>
+
+<!-- CÓDIGOS DE FALHA (DTC) - COMPACTADO (p-3 mt-2) -->
+      <div class="bg-[#111624] border border-white/5 rounded-2xl p-1 mt-2 relative z-10 flex-1 overflow-y-auto min-h-[90px]">
+        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Diagnostic Trouble Codes (DTC)</h3>
+        
+        <div v-if="diagnosticReport.suspectCylinder" class="bg-red-500/10 border border-red-500/30 rounded-xl p-2.5 flex flex-col gap-1.5">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <div class="text-xs font-bold text-red-400">Falha grave de ignição detectada na ECU.</div>
+          </div>
+          <div class="mt-1 text-[11px] font-mono bg-black/50 p-2 rounded-lg text-slate-300">
+            <span class="text-red-400 font-bold">P030{{ diagnosticReport.suspectCylinder }}</span> - Cylinder {{ diagnosticReport.suspectCylinder }} Misfire Detected
+          </div>
+        </div>
+
+        <div v-else class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-center gap-3 h-full">
+          <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          <div class="text-xs font-bold text-emerald-400">Nenhum código de falha detectado no módulo do motor.</div>
+        </div>
+      </div>
+
         </div>
       </div>
       <!-- MODAL DE INFORMAÇÃO EDUCACIONAL (LAYMAN) -->
+<!-- MODAL DE INFORMAÇÃO EDUCACIONAL (CORRIGIDO PARA LER 'desc' OU 'description') -->
       <transition enter-active-class="transition duration-300 ease-out" 
                   enter-from-class="opacity-0 scale-95" 
                   enter-to-class="opacity-100 scale-100" 
                   leave-active-class="transition duration-200 ease-in" 
                   leave-from-class="opacity-100 scale-100" 
                   leave-to-class="opacity-0 scale-95">
-        <div v-if="selectedSensorInfo" class="absolute inset-0 z-[100] flex items-center justify-center p-6">
+        <div v-if="selectedSensorInfo" class="absolute inset-0 z-[100] flex items-center justify-center p-4">
           <!-- Overlay escuro -->
           <div class="absolute inset-0 bg-[#020611]/80 backdrop-blur-md" @click="closeInfo"></div>
           
@@ -572,31 +561,31 @@
             <!-- Decorativo -->
             <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500"></div>
             
-            <div class="p-6 flex flex-col gap-6">
+            <div class="p-5 flex flex-col gap-4">
               <div class="flex justify-between items-start">
-                <h3 class="text-xl font-black text-white pr-4">{{ selectedSensorInfo.title }}</h3>
-                <button @click="closeInfo" class="text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-full">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <h3 class="text-lg font-black text-white pr-4">{{ selectedSensorInfo.title }}</h3>
+                <button @click="closeInfo" class="text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-1.5 rounded-full">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
               </div>
 
-              <div class="flex flex-col gap-4">
-                <!-- O que é -->
-                <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                  <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest block mb-1">Para que serve?</span>
-                  <p class="text-slate-200 text-sm leading-relaxed">{{ selectedSensorInfo.desc }}</p>
+              <div class="flex flex-col gap-3">
+                <!-- O que é / Descrição -->
+                <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
+                  <span class="text-[9px] text-blue-400 font-bold uppercase tracking-widest block mb-1">Diagnóstico Técnico</span>
+                  <!-- Aceita tanto .desc (dicionário antigo) quanto .description (alertas novos) -->
+                  <p class="text-slate-200 text-sm leading-relaxed">{{ selectedSensorInfo.desc || selectedSensorInfo.description }}</p>
                 </div>
 
-                <!-- Parâmetro Normal -->
-                <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
-                  <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block mb-1">Parâmetro Normal</span>
-                  <p class="text-emerald-50 text-sm font-bold">{{ selectedSensorInfo.normal }}</p>
+                <!-- Só exibe os campos abaixo se existirem no objeto (para os botões comuns de sensor) -->
+                <div v-if="selectedSensorInfo.normal" class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                  <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-widest block mb-1">Parâmetro Normal</span>
+                  <p class="text-emerald-50 text-xs font-bold">{{ selectedSensorInfo.normal }}</p>
                 </div>
 
-                <!-- Sintoma -->
-                <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                  <span class="text-[10px] text-red-400 font-bold uppercase tracking-widest block mb-1">Se der problema...</span>
-                  <p class="text-red-100 text-sm leading-relaxed">{{ selectedSensorInfo.warning }}</p>
+                <div v-if="selectedSensorInfo.warning" class="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+                  <span class="text-[9px] text-red-400 font-bold uppercase tracking-widest block mb-1">Se der problema...</span>
+                  <p class="text-red-100 text-xs leading-relaxed">{{ selectedSensorInfo.warning }}</p>
                 </div>
               </div>
             </div>
