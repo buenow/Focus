@@ -445,6 +445,94 @@
             </div>
           </div>
 
+          <!-- MÓDULO DE INJEÇÃO DE FALHAS (Excelente para fins didáticos/demonstração) -->
+          <div class="bg-[#111624] border border-white/5 rounded-2xl p-4 mb-6 relative z-10">
+            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3">Injetor de Falhas (Simulador)</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <button @click="simulationMode = 'normal'" :class="simulationMode === 'normal' ? 'bg-emerald-500 text-black' : 'bg-slate-800 text-slate-300'" class="px-3 py-2 rounded-xl text-xs font-bold transition-all">
+                🟢 Motor Saudável
+              </button>
+              <button @click="simulationMode = 'velas_gastas'" :class="simulationMode === 'velas_gastas' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-300'" class="px-3 py-2 rounded-xl text-xs font-bold transition-all">
+                🟡 Velas Gastas (Preventivo)
+              </button>
+              <button @click="simulationMode = 'combustivel_ruim'" :class="simulationMode === 'combustivel_ruim' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300'" class="px-3 py-2 rounded-xl text-xs font-bold transition-all">
+                ⛽ Combustível Suspeito
+              </button>
+              <button @click="simulationMode = 'falha_cilindro_3'" :class="simulationMode === 'falha_cilindro_3' ? 'bg-red-500 text-white' : 'bg-slate-800 text-slate-300'" class="px-3 py-2 rounded-xl text-xs font-bold transition-all">
+                🔴 Falha de Ignição (Cilindro 3)
+              </button>
+            </div>
+          </div>
+
+          <!-- GRID DE DIAGNÓSTICO AVANÇADO (Substitua todo o bloco anterior por este) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 relative z-10">
+            
+            <!-- Card 1: Painel Preventivo de Velas -->
+            <div class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
+              <div>
+                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Análise de Ignição (Velas)</div>
+                <div class="text-xl font-black mt-2" :class="sparkPlugHealth >= 85 ? 'text-emerald-400' : (sparkPlugHealth >= 50 ? 'text-amber-400' : 'text-red-500')">
+                  {{ diagnosticReport.plugStatus }}
+                </div>
+              </div>
+              <div class="mt-4">
+                <div class="flex justify-between text-[10px] text-slate-500 mb-1">
+                  <span>Vida Útil Estimada</span>
+                  <span>{{ sparkPlugHealth }}%</span>
+                </div>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                  <div class="h-full transition-all duration-500" :class="sparkPlugHealth >= 85 ? 'bg-emerald-500' : (sparkPlugHealth >= 50 ? 'bg-amber-500' : 'bg-red-500')" :style="{ width: `${sparkPlugHealth}%` }"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: NOVO Localizador de Cilindro (ESTE É O QUE PISCA SE HOUVER FALHA) -->
+            <div @click="openInfo('misfire')" 
+                class="bg-[#111624] border rounded-2xl p-5 transition-all cursor-pointer hover:bg-white/5 flex flex-col justify-between"
+                :class="diagnosticReport.suspectCylinder ? 'border-red-500/50 animate-pulse bg-red-950/10' : 'border-white/5'">
+              
+              <div>
+                <div class="flex justify-between items-center mb-3">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Misfire Monitor (Por Cilindro)</div>
+                  <span v-if="diagnosticReport.suspectCylinder" class="text-[9px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
+                    FALHA ATIVA
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-4 gap-2 text-center">
+                  <div v-for="(misfires, index) in cylinderMisfires" :key="index" class="p-2 rounded-xl border bg-slate-900/40 border-white/5">
+                    <div class="text-[10px] font-bold text-slate-400">CIL {{ index + 1 }}</div>
+                    <div class="text-lg font-black mt-1" :class="misfires > 0 ? 'text-red-400' : 'text-slate-600'">
+                      {{ misfires > 0 ? 'FAIL' : 'OK' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="text-[9px] text-slate-500 text-right mt-3 font-mono">Clique para ver o diagnóstico →</div>
+            </div>
+
+            <!-- Card 3: Monitor de Qualidade de Combustível -->
+            <div @click="openInfo('fuel')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col justify-between cursor-pointer hover:bg-white/5 transition-all">
+              <div>
+                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Análise de Combustível</div>
+                <div class="text-xl font-black mt-2" :class="fuelQualityScore >= 80 ? 'text-emerald-400' : (fuelQualityScore >= 50 ? 'text-amber-500' : 'text-red-500')">
+                  {{ diagnosticReport.fuelStatus }}
+                </div>
+              </div>
+              <div class="mt-3 text-[9px] text-slate-500 leading-relaxed bg-slate-900/50 p-2 rounded-lg border border-white/5 font-mono">
+                <span>Fator de Cruzamento:<br></span>
+                <span :class="simulationMode === 'combustivel_ruim' ? 'text-amber-400' : 'text-slate-400'">
+                  • Carga Motor + Atraso de Ignição Ativo (Knock Retard)
+                </span>
+              </div>
+            </div>
+
+          </div>    
+
+
+
+
           <!-- Códigos de Falha (DTC) -->
           <div class="bg-[#111624] border border-white/5 rounded-2xl p-6 relative z-10">
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Diagnostic Trouble Codes (DTC)</h3>
@@ -597,7 +685,7 @@ const closeInfo = () => {
 
 // --- ESTADOS DOS SENSORES ---
 const simSpeed = ref(0);
-const simRpm = ref(0); 
+const simRpm = ref(850); 
 const simLoad = ref(15);
 const simTemp = ref(90);  
 const simFuel = ref(58);
@@ -606,10 +694,116 @@ const simEcon = ref(9.4);
 const simLambda = ref(0.45);
 const simIat = ref(35);
 
+// Controle do Modal de Detalhes
+const isModalOpen = ref(false);
+const modalTitle = ref('');
+const modalContent = ref('');
+
+
+
 let simulationInterval = null;
 let isAccelerating = true;
 let isHeating = true;
 let engineStarted = false; 
+
+// Ponto de Ignição Dinâmico (Agora reativo para podermos simular o atraso)
+const simTiming = ref(12); 
+
+// ESTADOS DE DIAGNÓSTICO (Cruzamento de Parâmetros)
+const sparkPlugHealth = ref(100);    // 0% a 100%
+const fuelQualityScore = ref(100);  // 0% a 100%
+const cylinderMisfires = ref([0, 0, 0, 0]); // Contador de falhas [C1, C2, C3, C4]
+
+// INTERFACE: Modos de Teste (Para você injetar falhas na simulação)
+const simulationMode = ref('normal'); // 'normal', 'velas_gastas', 'combustivel_ruim', 'falha_cilindro_3'
+
+// COMPUTED: Cruzamento de Parâmetros para Diagnóstico em Tempo Real
+const diagnosticReport = computed(() => {
+  let plugStatus = 'Excelente';
+  let fuelStatus = 'Excelente';
+  let suspectCylinder = null;
+
+  // 1. Cruzamento para Qualidade de Combustível
+  // Se o ponto de ignição calculado estiver abaixo do esperado para o RPM atual (ex: < 15° em 2500 RPM com carga alta)
+  const timingEsperado = 10 + (simRpm.value * 0.003);
+  if (simLoad.value > 30 && simTiming.value < (timingEsperado - 5)) {
+    fuelStatus = 'Suspeito (Baixa Octanagem / Solvente)';
+  } else if (fuelQualityScore.value < 60) {
+    fuelStatus = 'Adulterado / Alerta de Detonação';
+  }
+
+  // 2. Cruzamento para Desgaste Preventivo de Velas
+  if (sparkPlugHealth.value < 85 && sparkPlugHealth.value >= 50) {
+    plugStatus = 'Atenção: Desgaste Preventivo Detectado';
+  } else if (sparkPlugHealth.value < 50) {
+    plugStatus = 'Crítico: Falha de Ignição Ativa';
+  }
+
+  // 3. Identificar qual cilindro está falhando
+  const maxMisfires = Math.max(...cylinderMisfires.value);
+  if (maxMisfires > 5) {
+    const idx = cylinderMisfires.value.indexOf(maxMisfires);
+    suspectCylinder = idx + 1; // Cilindro 1, 2, 3 ou 4
+  }
+
+  return { plugStatus, fuelStatus, suspectCylinder };
+});
+
+let obdStreamTimer = null;
+const tripTimer = ref(0); // Tempo de viagem rodando
+
+onMounted(() => {
+  // Isso simula o adaptador ELM327 / OBD-II mandando dados via Bluetooth a cada 500ms
+  obdStreamTimer = setInterval(() => {
+    tripTimer.value++;
+
+    // --- CENÁRIO 1: Tudo Normal (0 a 10 segundos) ---
+    if (tripTimer.value < 20) {
+      simLoad.value = 20 + Math.random() * 5;
+      simLambda.value = 0.3 + Math.random() * 0.5; // Oscilando normal
+      simTiming.value = 15; // Ponto normal
+      fuelQualityScore.value = 100;
+      cylinderMisfires.value = [0, 0, 0, 0];
+    }
+    
+    // --- CENÁRIO 2: Combustível Ruim detectado na aceleração (10 a 20 segundos) ---
+    else if (tripTimer.value >= 20 && tripTimer.value < 40) {
+      simLoad.value = 65; // Você pisou fundo
+      simTiming.value = 5; // A ECU derrubou o ponto para evitar detonação! (Combustível ruim)
+      simLambda.value = 0.4;
+      fuelQualityScore.value = 45; // Reflete a leitura para forçar o status
+    }
+    
+    // --- CENÁRIO 3: Motor volta ao normal, você tirou o pé (20 a 25 segundos) ---
+    else if (tripTimer.value >= 40 && tripTimer.value < 50) {
+      simLoad.value = 15;
+      simTiming.value = 12;
+      fuelQualityScore.value = 100; // Limpa o alerta
+    }
+
+    // --- CENÁRIO 4: Falha na Vela do Cilindro 3 na subida (25 a 35 segundos) ---
+    else if (tripTimer.value >= 50 && tripTimer.value < 70) {
+      simLoad.value = 80; // Muito esforço
+      simLambda.value = 0.05; // Sonda travou em pobre! Oxigênio não queimou.
+      cylinderMisfires.value[2] = 8; // O sensor CKP acusou falha grave no cilindro 3 (índice 2)
+    }
+
+    // --- RESET da simulação para recomeçar o ciclo ---
+    else {
+      tripTimer.value = 0;
+    }
+
+  }, 500); // Frequência de atualização do OBD-II virtual
+});
+
+onUnmounted(() => {
+  if (obdStreamTimer) clearInterval(obdStreamTimer);
+});
+
+onUnmounted(() => {
+  if (engineTimer) clearInterval(engineTimer);
+});
+
 
 // --- CÁLCULOS EXATOS DE PROGRESSO ---
 const rpmPercent = computed(() => {
