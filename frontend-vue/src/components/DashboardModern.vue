@@ -321,63 +321,127 @@
             </div>
           </div>
 
-          <!-- Grid de Sensores -->
+          <!-- Grid de Sensores com Barras de Estado Dinâmicas -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
             
-            <!-- Card 1: Engine Load -->
-            <div class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2">
-              <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Carga do Motor (Engine Load)</div>
-              <div class="flex items-end justify-between">
-                <span class="text-3xl font-black text-white">{{ Math.floor(simLoad) }}<span class="text-lg text-slate-500 ml-1">%</span></span>
-                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <!-- Card Exemplo (Carga do Motor): O padrão para todos -->
+            <div @click="openInfo('load')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
+              <div class="flex justify-between items-center mb-1">
+                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Carga Motor</div>
+                <!-- Badge de Estado -->
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" 
+                      :class="simLoad <= 30 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'">
+                  {{ simLoad <= 30 ? 'NORMAL' : 'ALTA' }}
+                </span>
               </div>
-              <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
-                <div class="bg-blue-500 h-full rounded-full transition-all duration-300" :style="{ width: `${simLoad}%` }"></div>
+              
+              <div class="text-3xl font-black text-white">{{ Math.floor(simLoad) }}<span class="text-lg text-slate-500 ml-1">%</span></div>
+              
+              <!-- Barra de Estado (Verde -> Amarelo -> Vermelho) -->
+              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
+                <div class="h-full transition-all duration-300" 
+                    :class="simLoad <= 30 ? 'bg-emerald-500' : (simLoad <= 70 ? 'bg-amber-500' : 'bg-red-500')" 
+                    :style="{ width: `${Math.min(simLoad, 100)}%` }"></div>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
+                <span>0%</span>
+                <span>30% (OK)</span>
+                <span>100%</span>
               </div>
             </div>
 
             <!-- Card 2: MAF -->
-            <div class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2">
-              <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Fluxo de Ar (MAF)</div>
-              <div class="flex items-end justify-between">
-                <span class="text-3xl font-black text-white">{{ (simRpm * 0.005).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">g/s</span></span>
-                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            <div @click="openInfo('maf')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
+              <div class="flex justify-between items-center mb-1">
+                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Fluxo Ar (MAF)</div>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">OK</span>
+              </div>
+              <div class="text-3xl font-black text-white">{{ (simRpm * 0.005).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">g/s</span></div>
+              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
+                <div class="h-full bg-emerald-500 transition-all duration-300" :style="{ width: `${Math.min((simRpm * 0.005) * 10, 100)}%` }"></div>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
+                <span>2g/s</span>
+                <span>7g/s (OK)</span>
+                <span>10g/s</span>
               </div>
             </div>
 
-            <!-- Card 3: Posição Borboleta -->
-            <div class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2">
-              <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Abertura Borboleta (TPS)</div>
-              <div class="flex items-end justify-between">
-                <span class="text-3xl font-black text-white">{{ (simLoad * 0.8).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">%</span></span>
-                <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+            <!-- Card 3: Borboleta (TPS) -->
+            <div @click="openInfo('tps')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
+              <div class="flex justify-between items-center mb-1">
+                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Borboleta (TPS)</div>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" 
+                      :class="(simLoad * 0.8) <= 10 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'">
+                  {{ (simLoad * 0.8) <= 10 ? 'LENTA' : 'ATIVA' }}
+                </span>
+              </div>
+              <div class="text-3xl font-black text-white">{{ (simLoad * 0.8).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">%</span></div>
+              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
+                <div class="h-full transition-all duration-300" 
+                    :class="(simLoad * 0.8) <= 10 ? 'bg-emerald-500' : 'bg-blue-500'" 
+                    :style="{ width: `${Math.min(simLoad * 0.8, 100)}%` }"></div>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
+                <span>0%</span>
+                <span>10% (Lenta)</span>
+                <span>100%</span>
               </div>
             </div>
 
-            <!-- Card 4: Tensão Sonda Lambda -->
-            <div class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2">
-              <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sonda Lambda (O2)</div>
-              <div class="flex items-end justify-between">
-                <span class="text-3xl font-black text-white">{{ (0.1 + Math.random() * 0.8).toFixed(2) }}<span class="text-lg text-slate-500 ml-1">V</span></span>
-                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+            <!-- Card 4: Sonda Lambda -->
+            <div @click="openInfo('lambda')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
+              <div class="flex justify-between items-center mb-1">
+                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sonda Lambda</div>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">OSCILANDO</span>
+              </div>
+              <div class="text-3xl font-black text-white">{{ (0.1 + Math.random() * 0.8).toFixed(2) }}<span class="text-lg text-slate-500 ml-1">V</span></div>
+              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
+                <div class="h-full bg-purple-500 transition-all duration-300" style="width: 50%;"></div>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
+                <span>0.1V</span>
+                <span>0.5V (OK)</span>
+                <span>0.9V</span>
               </div>
             </div>
 
-            <!-- Card 5: Avanço de Ignição -->
-            <div class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2">
-              <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Avanço de Ignição</div>
-              <div class="flex items-end justify-between">
-                <span class="text-3xl font-black text-white">{{ (10 + (simRpm * 0.003)).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">°</span></span>
-                <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"></path></svg>
+            <!-- Card 5: Ignição -->
+            <div @click="openInfo('timing')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
+              <div class="flex justify-between items-center mb-1">
+                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ignição</div>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" 
+                      :class="(10 + (simRpm * 0.003)) <= 15 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'">
+                  {{ (10 + (simRpm * 0.003)) <= 15 ? 'OK' : 'AVANÇADO' }}
+                </span>
+              </div>
+              <div class="text-3xl font-black text-white">{{ (10 + (simRpm * 0.003)).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">°</span></div>
+              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
+                <div class="h-full transition-all duration-300" 
+                    :class="(10 + (simRpm * 0.003)) <= 15 ? 'bg-emerald-500' : 'bg-amber-500'" 
+                    style="width: 40%;"></div>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
+                <span>5°</span>
+                <span>15° (OK)</span>
+                <span>45°</span>
               </div>
             </div>
 
-            <!-- Card 6: Temp Ar Admissão (IAT) -->
-            <div class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2">
-              <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Temp. Ar Admissão (IAT)</div>
-              <div class="flex items-end justify-between">
-                <span class="text-3xl font-black text-white">35<span class="text-lg text-slate-500 ml-1">°C</span></span>
-                <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+            <!-- Card 6: Temperatura Admissão -->
+            <div @click="openInfo('iat')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
+              <div class="flex justify-between items-center mb-1">
+                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Temp. Admissão</div>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">OK</span>
+              </div>
+              <div class="text-3xl font-black text-white">35<span class="text-lg text-slate-500 ml-1">°C</span></div>
+              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
+                <div class="h-full bg-cyan-500 transition-all duration-300" style="width: 35%;"></div>
+              </div>
+              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
+                <span>20°C</span>
+                <span>60°C (OK)</span>
+                <span>120°C</span>
               </div>
             </div>
           </div>
@@ -405,7 +469,53 @@
 
         </div>
       </div>
+      <!-- MODAL DE INFORMAÇÃO EDUCACIONAL (LAYMAN) -->
+      <transition enter-active-class="transition duration-300 ease-out" 
+                  enter-from-class="opacity-0 scale-95" 
+                  enter-to-class="opacity-100 scale-100" 
+                  leave-active-class="transition duration-200 ease-in" 
+                  leave-from-class="opacity-100 scale-100" 
+                  leave-to-class="opacity-0 scale-95">
+        <div v-if="selectedSensorInfo" class="absolute inset-0 z-[100] flex items-center justify-center p-6">
+          <!-- Overlay escuro -->
+          <div class="absolute inset-0 bg-[#020611]/80 backdrop-blur-md" @click="closeInfo"></div>
+          
+          <!-- Caixa do Modal -->
+          <div class="bg-[#0a0f1c] border border-white/10 shadow-2xl rounded-3xl w-full max-w-md relative z-10 overflow-hidden">
+            <!-- Decorativo -->
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500"></div>
+            
+            <div class="p-6 flex flex-col gap-6">
+              <div class="flex justify-between items-start">
+                <h3 class="text-xl font-black text-white pr-4">{{ selectedSensorInfo.title }}</h3>
+                <button @click="closeInfo" class="text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-full">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+              </div>
 
+              <div class="flex flex-col gap-4">
+                <!-- O que é -->
+                <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                  <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest block mb-1">Para que serve?</span>
+                  <p class="text-slate-200 text-sm leading-relaxed">{{ selectedSensorInfo.desc }}</p>
+                </div>
+
+                <!-- Parâmetro Normal -->
+                <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                  <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block mb-1">Parâmetro Normal</span>
+                  <p class="text-emerald-50 text-sm font-bold">{{ selectedSensorInfo.normal }}</p>
+                </div>
+
+                <!-- Sintoma -->
+                <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                  <span class="text-[10px] text-red-400 font-bold uppercase tracking-widest block mb-1">Se der problema...</span>
+                  <p class="text-red-100 text-sm leading-relaxed">{{ selectedSensorInfo.warning }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
     </main>
   </div>
 </template>
@@ -415,6 +525,56 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 // --- ESTADO DE ROTEAMENTO (NOVO) ---
 const activeView = ref('painel'); 
+
+// Controle do Modal de Informações
+const selectedSensorInfo = ref(null);
+
+const sensorDictionary = {
+  load: {
+    title: 'Carga do Motor (Engine Load)',
+    normal: '15% a 30% (marcha lenta) | Até 100% acelerando',
+    desc: 'Imagine que o motor está carregando uma mochila. Mede o quanto de esforço físico o motor está fazendo no momento.',
+    warning: 'Carga alta constante com o carro parado indica problemas mecânicos, como componentes travados ou falha de leitura.'
+  },
+  maf: {
+    title: 'Fluxo de Massa de Ar (MAF)',
+    normal: '2 a 7 g/s (marcha lenta) | Sobe ao acelerar',
+    desc: 'O "nariz" do carro. Mede exatamente quantos gramas de ar estão entrando para o computador calcular a gota exata de combustível.',
+    warning: 'Se sujar ou falhar, o motor erra a "receita" da mistura. O carro começa a engasgar, perde força ou consome muito combustível.'
+  },
+  tps: {
+    title: 'Abertura da Borboleta (TPS)',
+    normal: '0% a 10% (pedal solto) | 90% a 100% (pé no fundo)',
+    desc: 'É a "torneira de ar", ligada diretamente ao seu pedal do acelerador. Mostra o quanto você está exigindo do carro.',
+    warning: 'Se o sensor falhar, o carro pode não responder ao acelerador ou, pior, acelerar sozinho.'
+  },
+  lambda: {
+    title: 'Sonda Lambda (Sensor O2)',
+    normal: 'Oscilando rapidamente entre 0.1V e 0.9V',
+    desc: 'Fica no escapamento "provando" a fumaça. Avisa o motor se ele está gastando muito combustível ou se a mistura está pobre.',
+    warning: 'Se o valor travar e parar de oscilar, o sensor pifou. O carro entra em modo de emergência e o consumo de combustível dispara.'
+  },
+  timing: {
+    title: 'Avanço de Ignição',
+    normal: '5° a 15° (marcha lenta) | > 30° (alta velocidade)',
+    desc: 'É o "timing" exato (em graus) em que a vela solta a faísca para causar a explosão dentro do motor.',
+    warning: 'Se a faísca ocorrer na hora errada, o motor faz barulho metálico ("batida de pino"), perde força e pode sofrer danos internos graves.'
+  },
+  iat: {
+    title: 'Temp. do Ar de Admissão (IAT)',
+    normal: 'Pouco acima da temperatura ambiente (20°C a 60°C)',
+    desc: 'Mede se o ar que está entrando está quente ou frio. Ar frio gera explosões mais fortes (mais potência).',
+    warning: 'Leituras absurdas (ex: 120°C num dia frio) fazem o motor cortar o combustível, deixando o carro muito fraco.'
+  }
+};
+
+const openInfo = (sensorKey) => {
+  selectedSensorInfo.value = sensorDictionary[sensorKey];
+};
+
+const closeInfo = () => {
+  selectedSensorInfo.value = null;
+};
 
 // --- ESTADOS DOS SENSORES ---
 const simSpeed = ref(0);
