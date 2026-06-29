@@ -303,129 +303,85 @@
 
 
 
-          <!-- Grid de Sensores com Barras de Estado Dinâmicas -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
-            
-            <!-- Card 1: Carga Motor -->
-            <div @click="openInfo('load')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
-              <div class="flex justify-between items-center mb-1">
-                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Carga Motor</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300" 
-                      :class="simLoad <= 40 ? 'bg-emerald-500/20 text-emerald-400' : (simLoad <= 80 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')">
-                  {{ simLoad <= 40 ? 'NORMAL' : (simLoad <= 80 ? 'ATENÇÃO' : 'ALTA') }}
-                </span>
-              </div>
-              <div class="text-3xl font-black text-white">{{ Math.floor(simLoad) }}<span class="text-lg text-slate-500 ml-1">%</span></div>
-              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
-                <div class="h-full transition-all duration-300" 
-                    :class="simLoad <= 40 ? 'bg-emerald-500' : (simLoad <= 80 ? 'bg-amber-500' : 'bg-red-500')" 
-                    :style="{ width: `${Math.max(0, Math.min(simLoad, 100))}%` }"></div>
-              </div>
-              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>0%</span><span>40% (OK)</span><span>100%</span>
-              </div>
+<!-- ========================================= -->
+      <!-- ABA 1: SENSORES EM TEMPO REAL -->
+      <!-- ========================================= -->
+      <div v-if="activeTab === 'live'" class="flex-1 overflow-y-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4">
+          
+          <div @click="openInfo('load')" class="bg-[#111624] border border-white/5 rounded-2xl p-4 flex flex-col justify-center cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex justify-between items-center mb-2">
+              <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Carga Motor</div>
+              <span v-if="simLoad > 80" class="text-[9px] bg-red-950 text-red-500 px-2 py-0.5 rounded-full font-bold">ALTA</span>
             </div>
-
-            <!-- Card 2: MAF -->
-            <div @click="openInfo('maf')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
-              <div class="flex justify-between items-center mb-1">
-                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Fluxo Ar (MAF)</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300"
-                      :class="(simRpm * 0.005) <= 6 ? 'bg-emerald-500/20 text-emerald-400' : ((simRpm * 0.005) <= 8.5 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')">
-                  {{ (simRpm * 0.005) <= 6 ? 'OK' : 'ALTO' }}
-                </span>
-              </div>
-              <div class="text-3xl font-black text-white">{{ (simRpm * 0.005).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">g/s</span></div>
-              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
-                <div class="h-full transition-colors duration-300" 
-                    :class="(simRpm * 0.005) <= 6 ? 'bg-emerald-500' : ((simRpm * 0.005) <= 8.5 ? 'bg-amber-500' : 'bg-red-500')"
-                    :style="{ width: `${Math.max(0, Math.min(((simRpm * 0.005) / 10) * 100, 100))}%` }"></div>
-              </div>
-              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>2g/s</span><span>6g/s (OK)</span><span>10g/s</span>
-              </div>
+            <div class="text-4xl font-black mt-1 leading-none" :class="simLoad > 80 ? 'text-red-400' : 'text-white'">
+              {{ simLoad.toFixed(0) }}<span class="text-lg text-slate-500">%</span>
             </div>
-
-            <!-- Card 3: Borboleta (TPS) -->
-            <div @click="openInfo('tps')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
-              <div class="flex justify-between items-center mb-1">
-                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Borboleta (TPS)</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300" 
-                      :class="(simLoad * 0.8) <= 15 ? 'bg-emerald-500/20 text-emerald-400' : ((simLoad * 0.8) <= 70 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')">
-                  {{ (simLoad * 0.8) <= 15 ? 'LENTA' : ((simLoad * 0.8) <= 70 ? 'ATIVA' : 'TOTAL') }}
-                </span>
-              </div>
-              <div class="text-3xl font-black text-white">{{ (simLoad * 0.8).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">%</span></div>
-              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
-                <div class="h-full transition-all duration-300" 
-                    :class="(simLoad * 0.8) <= 15 ? 'bg-emerald-500' : ((simLoad * 0.8) <= 70 ? 'bg-amber-500' : 'bg-red-500')" 
-                    :style="{ width: `${Math.max(0, Math.min(simLoad * 0.8, 100))}%` }"></div>
-              </div>
-              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>0%</span><span>15% (Lenta)</span><span>100%</span>
-              </div>
-            </div>
-
-            <!-- Card 4: Sonda Lambda (Corrigido para evitar travamento) -->
-            <div @click="openInfo('lambda')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
-              <div class="flex justify-between items-center mb-1">
-                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sonda Lambda</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300"
-                      :class="(simLambda || 0.45) > 0.3 && (simLambda || 0.45) < 0.7 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'">
-                  OSCILANDO
-                </span>
-              </div>
-              <div class="text-3xl font-black text-white">{{ (simLambda || 0.45).toFixed(2) }}<span class="text-lg text-slate-500 ml-1">V</span></div>
-              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
-                <div class="h-full transition-all duration-100" 
-                    :class="(simLambda || 0.45) > 0.3 && (simLambda || 0.45) < 0.7 ? 'bg-emerald-500' : ((simLambda || 0.45) <= 0.3 ? 'bg-blue-500' : 'bg-red-500')"
-                    :style="{ width: `${Math.max(0, Math.min((((simLambda || 0.45) - 0.1) / 0.8) * 100, 100))}%` }"></div>
-              </div>
-              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>0.1V</span><span>0.5V (Ideal)</span><span>0.9V</span>
-              </div>
-            </div>
-
-            <!-- Card 5: Ignição -->
-            <div @click="openInfo('timing')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
-              <div class="flex justify-between items-center mb-1">
-                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ignição</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300" 
-                      :class="(10 + (simRpm * 0.003)) <= 20 ? 'bg-emerald-500/20 text-emerald-400' : ((10 + (simRpm * 0.003)) <= 35 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')">
-                  {{ (10 + (simRpm * 0.003)) <= 20 ? 'OK' : 'AVANÇADO' }}
-                </span>
-              </div>
-              <div class="text-3xl font-black text-white">{{ (10 + (simRpm * 0.003)).toFixed(1) }}<span class="text-lg text-slate-500 ml-1">°</span></div>
-              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
-                <div class="h-full transition-all duration-300" 
-                    :class="(10 + (simRpm * 0.003)) <= 20 ? 'bg-emerald-500' : ((10 + (simRpm * 0.003)) <= 35 ? 'bg-amber-500' : 'bg-red-500')" 
-                    :style="{ width: `${Math.max(0, Math.min((((10 + (simRpm * 0.003)) - 5) / 40) * 100, 100))}%` }"></div>
-              </div>
-              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>5°</span><span>20° (OK)</span><span>45°</span>
-              </div>
-            </div>
-
-            <!-- Card 6: Temperatura Admissão -->
-            <div @click="openInfo('iat')" class="bg-[#111624] border border-white/5 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer hover:bg-white/10 transition-all">
-              <div class="flex justify-between items-center mb-1">
-                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Temp. Admissão</div>
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300"
-                      :class="(simIat || 35) <= 50 ? 'bg-emerald-500/20 text-emerald-400' : ((simIat || 35) <= 80 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')">
-                  {{ (simIat || 35) <= 50 ? 'OK' : 'ALTA' }}
-                </span>
-              </div>
-              <div class="text-3xl font-black text-white">{{ Math.floor(simIat || 35) }}<span class="text-lg text-slate-500 ml-1">°C</span></div>
-              <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden flex">
-                <div class="h-full transition-all duration-300" 
-                    :class="(simIat || 35) <= 50 ? 'bg-emerald-500' : ((simIat || 35) <= 80 ? 'bg-amber-500' : 'bg-red-500')"
-                    :style="{ width: `${Math.max(0, Math.min((((simIat || 35) - 20) / 100) * 100, 100))}%` }"></div>
-              </div>
-              <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
-                <span>20°C</span><span>50°C (OK)</span><span>120°C</span>
-              </div>
+            <div class="mt-4 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div class="h-full transition-all duration-300" :class="simLoad > 80 ? 'bg-red-500' : 'bg-blue-500'" :style="{ width: `${simLoad}%` }"></div>
             </div>
           </div>
+
+          <div @click="openInfo('maf')" class="bg-[#111624] border border-white/5 rounded-2xl p-4 flex flex-col justify-center cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Fluxo Ar (MAF)</div>
+            <div class="text-4xl font-black mt-1 leading-none">
+              {{ (simLoad * 0.25).toFixed(1) }}<span class="text-lg text-slate-500">g/s</span>
+            </div>
+            <div class="mt-4 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div class="bg-blue-500 h-full transition-all" :style="{ width: `${(simLoad * 0.25)}%` }"></div>
+            </div>
+          </div>
+
+          <div @click="openInfo('tps')" class="bg-[#111624] border border-white/5 rounded-2xl p-4 flex flex-col justify-center cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Borboleta (TPS)</div>
+            <div class="text-4xl font-black mt-1 leading-none">
+              {{ (simLoad * 0.8).toFixed(1) }}<span class="text-lg text-slate-500">%</span>
+            </div>
+            <div class="mt-4 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div class="bg-amber-500 h-full transition-all" :style="{ width: `${(simLoad * 0.8)}%` }"></div>
+            </div>
+          </div>
+
+          <div @click="openInfo('lambda')" class="bg-[#111624] border border-white/5 rounded-2xl p-4 flex flex-col justify-center cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex justify-between items-center mb-2">
+              <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sonda Lambda</div>
+              <span class="text-[9px] bg-amber-900/30 text-amber-500 px-2 py-0.5 rounded-full font-bold">OSCILANDO</span>
+            </div>
+            <div class="text-4xl font-black mt-1 leading-none">
+              {{ simLambda.toFixed(2) }}<span class="text-lg text-slate-500">v</span>
+            </div>
+            <div class="mt-4 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div class="bg-blue-500 h-full transition-all" :style="{ width: `${simLambda * 100}%` }"></div>
+            </div>
+          </div>
+
+          <div @click="openInfo('timing')" class="bg-[#111624] border border-white/5 rounded-2xl p-4 flex flex-col justify-center cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex justify-between items-center mb-2">
+              <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ignição</div>
+              <span v-if="simTiming < 10" class="text-[9px] bg-amber-900/30 text-amber-500 px-2 py-0.5 rounded-full font-bold">ATRASADO</span>
+            </div>
+            <div class="text-4xl font-black mt-1 leading-none" :class="simTiming < 10 ? 'text-amber-400' : 'text-white'">
+              {{ simTiming.toFixed(1) }}<span class="text-lg text-slate-500">°</span>
+            </div>
+            <div class="mt-4 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div class="bg-amber-500 h-full transition-all" :style="{ width: `${(simTiming / 45) * 100}%` }"></div>
+            </div>
+          </div>
+
+          <div @click="openInfo('temp')" class="bg-[#111624] border border-white/5 rounded-2xl p-4 flex flex-col justify-center cursor-pointer hover:bg-white/5 transition-colors">
+            <div class="flex justify-between items-center mb-2">
+              <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Temp. Admissão</div>
+              <span class="text-[9px] bg-emerald-900/30 text-emerald-400 px-2 py-0.5 rounded-full font-bold">OK</span>
+            </div>
+            <div class="text-4xl font-black mt-1 leading-none">
+              {{ simTemp.toFixed(2) }}<span class="text-lg text-slate-500">°C</span>
+            </div>
+            <div class="mt-4 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div class="bg-emerald-500 h-full transition-all" :style="{ width: `${(simTemp / 120) * 100}%` }"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
           <!-- MÓDULO DE INJEÇÃO DE FALHAS (Excelente para fins didáticos/demonstração) 
           <div class="bg-[#111624] border border-white/5 rounded-2xl p-4 mb-6 relative z-10">
@@ -446,85 +402,98 @@
             </div>
           </div>
 -->
-          <!-- GRID DE DIAGNÓSTICO AVANÇADO (OTIMIZADO PARA 10 POLEGADAS) -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-1 relative z-10">
-            
-            <!-- Card 1: Análise de Ignição -->
-            <div class="bg-[#111624] border border-white/5 rounded-2xl p-3 flex flex-col justify-between">
-              <div>
-                <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Análise de Ignição (Velas)</div>
-                <div class="text-base font-black mt-1" :class="sparkPlugHealth >= 85 ? 'text-emerald-400' : (sparkPlugHealth >= 50 ? 'text-amber-400' : 'text-red-500')">
-                  {{ diagnosticReport.plugStatus }}
-                </div>
-              </div>
-              <div class="mt-2">
-                <div class="flex justify-between text-[9px] text-slate-500 mb-1">
-                  <span>Vida Útil</span>
-                  <span>{{ sparkPlugHealth }}%</span>
-                </div>
-                <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                  <div class="h-full transition-all duration-500" :class="sparkPlugHealth >= 85 ? 'bg-emerald-500' : (sparkPlugHealth >= 50 ? 'bg-amber-500' : 'bg-red-500')" :style="{ width: `${sparkPlugHealth}%` }"></div>
-                </div>
-              </div>
+<!-- ========================================= -->
+      <!-- ABA 2: DIAGNÓSTICO E CÓDIGOS DTC -->
+      <!-- ========================================= -->
+      <div v-if="activeTab === 'dtc'" class="flex-1 flex flex-col gap-2 overflow-hidden">
+        
+        <!-- GRID DE CARDS (COMPACTADO) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 shrink-0">
+          
+          <!-- CARD 1: VELAS -->
+          <div class="bg-[#111624] border border-white/5 rounded-xl p-3 flex flex-col justify-center">
+            <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Análise de Ignição (Velas)</div>
+            <div class="text-xl font-black" :class="sparkPlugHealth >= 85 ? 'text-emerald-400' : 'text-amber-400'">
+              {{ diagnosticReport.plugStatus }}
             </div>
-
-            <!-- Card 2: Misfire Monitor -->
-            <div @click="openInfo('misfire')" 
-                class="border rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all duration-300"
-                :class="diagnosticReport.suspectCylinder ? 'bg-red-950/40 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse' : 'bg-[#111624] border-white/5 hover:bg-white/5'">
-              
-              <div>
-                <div class="flex justify-between items-center mb-2">
-                  <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Misfire Monitor</div>
-                  <span v-if="diagnosticReport.suspectCylinder" class="text-[8px] bg-red-600 text-white px-2 py-0.5 rounded-full font-bold animate-bounce">
-                    FALHA CRÍTICA
-                  </span>
-                </div>
-
-                <div class="grid grid-cols-4 gap-1.5 text-center">
-                  <div v-for="(misfires, index) in cylinderMisfires" :key="index" class="p-1 rounded-lg border transition-all"
-                      :class="diagnosticReport.suspectCylinder === (index + 1) ? 'bg-red-500/20 border-red-500 text-red-400' : 'bg-slate-900/40 border-white/5 text-slate-600'">
-                    <div class="text-[9px] font-bold" :class="diagnosticReport.suspectCylinder === (index + 1) ? 'text-red-300' : 'text-slate-400'">CIL {{ index + 1 }}</div>
-                    <div class="text-sm font-black">{{ misfires > 0 ? 'FAIL' : 'OK' }}</div>
-                  </div>
-                </div>
-              </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div class="h-full bg-emerald-500" :style="{ width: `${sparkPlugHealth}%` }"></div>
             </div>
-
-            <!-- Card 3: Qualidade de Combustível -->
-            <div @click="openInfo('fuel')" 
-                class="border rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all duration-300"
-                :class="diagnosticReport.fuelStatus.includes('Suspeito') ? 'bg-amber-950/30 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-[#111624] border-white/5 hover:bg-white/5'">
-              
-              <div>
-                <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Qualidade de Combustível</div>
-                <div class="text-base font-black mt-1 leading-tight" 
-                    :class="diagnosticReport.fuelStatus.includes('Suspeito') ? 'text-amber-400 animate-pulse' : 'text-emerald-400'">
-                  {{ diagnosticReport.fuelStatus }}
-                </div>
-              </div>
-              <div class="mt-2 text-[8px] leading-tight p-1.5 rounded-md border font-mono transition-colors"
-                  :class="diagnosticReport.fuelStatus.includes('Suspeito') ? 'bg-amber-900/40 border-amber-500/50 text-amber-200' : 'bg-slate-900/50 border-white/5 text-slate-500'">
-                Cruzamento Automático: Carga x Avanço
-              </div>
-            </div>
-
           </div>
 
+          <!-- CARD 2: MISFIRE (LAYOUT VERTICAL PARA CABER) -->
+          <div @click="openInfo('misfire')" 
+               class="border rounded-xl p-3 flex flex-col justify-center cursor-pointer transition-all"
+               :class="diagnosticReport.suspectCylinder ? 'bg-red-950/40 border-red-500' : 'bg-[#111624] border-white/5'">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Monitor de Falha</span>
+              <span v-if="diagnosticReport.suspectCylinder" class="text-[8px] bg-red-600 text-white px-1.5 py-0.5 rounded font-bold">CRÍTICO</span>
+            </div>
+            <div class="grid grid-cols-4 gap-1 text-center">
+              <div v-for="(misfires, index) in cylinderMisfires" :key="index" class="p-1 rounded border border-white/5 bg-slate-900/50">
+                <div class="text-[8px] text-slate-500">C{{ index + 1 }}</div>
+                <div class="text-[10px] font-bold" :class="misfires > 0 ? 'text-red-400' : 'text-slate-300'">{{ misfires > 0 ? 'FAIL' : 'OK' }}</div>
+              </div>
+            </div>
+          </div>
 
-<!-- Cabeçalho / Título (Compacto) -->
-      <div class="mb-2 flex justify-between items-center z-10">
+          <!-- CARD 3: COMBUSTÍVEL -->
+          <div @click="openInfo('fuel')" 
+               class="border rounded-xl p-3 flex flex-col justify-center cursor-pointer transition-all"
+               :class="diagnosticReport.fuelStatus.includes('Suspeito') ? 'bg-amber-950/30 border-amber-500' : 'bg-[#111624] border-white/5'">
+            <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Combustível</div>
+            <div class="text-xl font-black" :class="diagnosticReport.fuelStatus.includes ('Suspeito') ? 'text-amber-400' : 'text-emerald-400'">
+              {{ diagnosticReport.fuelStatus }}
+            </div>
+          </div>
+        </div>
+
+        <!-- BOX DTC (ESPAÇO OTIMIZADO) -->
+        <div class="bg-[#111624] border border-white/5 rounded-xl p-3 flex-1 flex flex-col min-h-0">
+          <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Códigos de Diagnóstico de Problemas (DTC)</h3>
+          
+          <div v-if="diagnosticReport.suspectCylinder" class="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+            <div class="text-[11px] font-bold text-red-400 mb-1">Falha detectada na ECU</div>
+            <div class="text-[10px] font-mono bg-black/30 p-2 rounded text-red-300">
+              P030{{ diagnosticReport.suspectCylinder }} - Cylinder {{ diagnosticReport.suspectCylinder }} Misfire
+            </div>
+          </div>
+
+          <div v-else class="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 flex items-center gap-2">
+            <div class="text-[10px] font-bold text-emerald-400">Nenhum código de falha ativo.</div>
+          </div>
+        </div>
+
+      </div>
+
+
+<!-- CABEÇALHO E BOTÕES DAS ABAS (AJUSTADO PARA MENOR ESPAÇAMENTO) -->
+      <div class="mb-2 flex justify-between items-center z-10 shrink-0">
         <div>
-          <h1 class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+          <h2 class="text-lg font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
             Diagnóstico Dinâmico
-          </h1>
-          <p class="text-[10px] text-slate-500 font-mono">OBD-II DATA STREAM • TEMPO REAL</p>
+          </h2>
+          <p class="text-[9px] text-slate-500 font-mono">OBD-II DATA STREAM • TEMPO REAL</p>
+        </div>
+        
+        <div class="flex bg-[#111624] rounded-lg p-0.5 border border-white/10">
+          <button @click="activeTab = 'live'" 
+                  :class="activeTab === 'live' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'" 
+                  class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-all">
+            Sensores
+          </button>
+          <button @click="activeTab = 'dtc'" 
+                  :class="activeTab === 'dtc' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'" 
+                  class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1.5">
+            Falhas
+            <span v-if="diagnosticReport.suspectCylinder" class="w-1.5 h-1.5 rounded-full bg-red-300 animate-pulse"></span>
+          </button>
         </div>
       </div>
 
 <!-- CÓDIGOS DE FALHA (DTC) - COMPACTADO (p-3 mt-2) -->
-      <div class="bg-[#111624] border border-white/5 rounded-2xl p-1 mt-2 relative z-10 flex-1 overflow-y-auto min-h-[90px]">
-        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Diagnostic Trouble Codes (DTC)</h3>
+      <div class="bg-[#111624] border border-white/5 rounded-2xl p-1 mt-2 relative z-10 flex-1 overflow-y-auto min-h-[20px]">
+        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Códigos de Diagnóstico (DTC)</h3>
         
         <div v-if="diagnosticReport.suspectCylinder" class="bg-red-500/10 border border-red-500/30 rounded-xl p-2.5 flex flex-col gap-1.5">
           <div class="flex items-center gap-3">
@@ -598,7 +567,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-
+const activeTab = ref('live');
 // Variável para guardar a referência do nosso "timer"
 let lambdaTimer = null;
 
